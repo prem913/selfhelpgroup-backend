@@ -1,21 +1,17 @@
 const mongoose = require("mongoose");
 
-const organisationmodel = mongoose.Schema(
+const departmentmodel = mongoose.Schema(
   {
     department: {
       type: String,
       required: true,
       enum: [
-        "Healthcare",
-        "Education",
-        "Tribal Welfare",
-        "Social Welfare",
-        "Women and child development",
+        "healthcare",
+        "education",
+        "tribal welfare",
+        "social welfare",
+        "women and child development",
       ],
-    },
-    name: {
-      type: String,
-      required: true,
     },
     contact: {
       type: String,
@@ -25,9 +21,15 @@ const organisationmodel = mongoose.Schema(
       type: String,
       required: true,
     },
+    password: {
+      type: String,
+      required: true,
+    },
   },
   { timestamps: true }
 );
+
+module.exports = mongoose.model("departmentmodel", departmentmodel);
 //type of products list
 // packed item and loose items
 //list of packed items and loose items

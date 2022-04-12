@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-// location latitude and longitude
+//  to implement location latitude and longitude
 const shgSchema = new mongoose.Schema(
   {
     name: {
@@ -41,3 +41,5 @@ const shgSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+module.exports = mongoose.model("shg", shgSchema);
