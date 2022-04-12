@@ -38,6 +38,7 @@ const shgSchema = new mongoose.Schema(
         },
       },
     ],
+    otp: String,
   },
   { timestamps: true }
 );
