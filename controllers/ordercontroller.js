@@ -19,7 +19,6 @@ const createorder = asyncHandler(async (req, res) => {
   const orderdata = req.body;
   orderdata.departmentid = req.user._id;
   orderdata.department = req.user.department;
-  console.log(orderdata);
   const neworder = new Order(orderdata);
   await neworder.save();
   res.json({

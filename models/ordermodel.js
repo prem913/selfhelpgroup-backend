@@ -32,6 +32,38 @@ const ordermodel = mongoose.Schema(
       type: String,
       required: true,
     },
+    bid: [
+      {
+        shgId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Shg",
+        },
+        shgname: {
+          type: String,
+          required: true,
+        },
+        shgcontact: {
+          type: String,
+          required: true,
+        },
+        shglocation: {
+          type: String,
+          required: true,
+        },
+        shgproduct: {
+          type: String,
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+        },
+        price: {
+          type: Number,
+          required: true,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );
