@@ -9,7 +9,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 dbconnect();
 app.get("/", (req, res) => {
-  res.send("Hello World");
+  res.send("Server Running");
 });
 //routes
 app.use("/shg", require("./routes/shgroute"));

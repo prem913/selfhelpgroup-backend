@@ -41,6 +41,10 @@ const protectshg = asyncHandler(async (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       //Get user from token
       req.user = await shg.findById(decoded.shgId).select("-otp");
+      if (!req.user) {
+        res.status(401);
+        throw new Error("Not Authorized");
+      }
       next();
     } catch (error) {
       console.log(error);
