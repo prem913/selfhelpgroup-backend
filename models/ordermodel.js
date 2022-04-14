@@ -11,6 +11,15 @@ const ordermodel = mongoose.Schema(
       type: String,
       required: true,
     },
+    instituteid: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Institute",
+      required: true,
+    },
+    institutename: {
+      type: String,
+      required: true,
+    },
     itemtype: {
       type: String,
       required: true,

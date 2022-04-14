@@ -1,6 +1,7 @@
 const asynchandler = require("express-async-handler");
 const departmentmodel = require("../models/departmentmodel");
 const Order = require("../models/ordermodel");
+const Institute = require("../models/institutemodel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const registerdepartment = asynchandler(async (req, res) => {
@@ -56,7 +57,22 @@ const logindepartment = asynchandler(async (req, res) => {
   });
 });
 
+const instituteunderdepartment = asynchandler(async (req, res) => {
+  const { department } = req.user;
+  if (!department) {
+    return res.status(400).json({
+      error: "Please provide department",
+    });
+  }
+  const institute = await Institute.find({ department });
+  res.json({
+    message: "Institutes under this department",
+    data: institute,
+  });
+});
+
 module.exports = {
   registerdepartment,
   logindepartment,
+  instituteunderdepartment,
 };
