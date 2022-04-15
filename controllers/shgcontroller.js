@@ -81,12 +81,18 @@ const verifyOtp = asynchandler(async (req, res) => {
 });
 
 const addproducts = asynchandler(async (req, res) => {
-  const { name, type, quantity, price, manufacturingdate } = req.body;
+  const { name, type, quantity, price, manufacturingdate, expirydate } =
+    req.body;
   const shgdata = await shg.findById(req.user._id);
-  if (!name || !type || !quantity || !price || !manufacturingdate) {
+  if (!name || !type || !quantity || !price) {
+    return res.status(400).json({
+      error: "Please provide all the details name type quantity price and",
+    });
+  }
+  if (type === "packed" && (!manufacturingdate || !expirydate)) {
     return res.status(400).json({
       error:
-        "Please provide all the details name type quantity price and manufacturingdate",
+        "Please provide manufacturing date and expiry date for packed items",
     });
   }
   const productcheck = shgdata.products.find(
@@ -97,13 +103,17 @@ const addproducts = asynchandler(async (req, res) => {
       error: "product already exists",
     });
   }
-  shgdata.products.push({
+  const data = {
     name,
     type,
     quantity,
     price,
-    manufacturingdate,
-  });
+  };
+  if (type === "packed") {
+    data.manufacturingdate = manufacturingdate;
+    data.expirydate = expirydate;
+  }
+  shgdata.products.push(data);
   await shgdata.save();
   res.status(200).json({
     message: "product added successfully",
@@ -155,10 +165,17 @@ const bid = asynchandler(async (req, res) => {
   });
 });
 
+const getproducts = asynchandler(async (req, res) => {
+  const shgdata = await shg.findById(req.user._id);
+  res.status(200).json({
+    products: shgdata.products,
+  });
+});
 module.exports = {
   registershg,
   shglogin,
   verifyOtp,
   addproducts,
   bid,
+  getproducts,
 };

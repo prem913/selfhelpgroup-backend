@@ -15,6 +15,7 @@ app.get("/", (req, res) => {
 app.use("/shg", require("./routes/shgroute"));
 app.use("/department", require("./routes/departmentroute"));
 app.use("/order", require("./routes/orderroute"));
+app.use("/institute", require("./routes/instituteroute"));
 //middlewares
 app.use(errorHandler);
 const port = process.env.PORT || 5000;
