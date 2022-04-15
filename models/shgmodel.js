@@ -23,6 +23,7 @@ const shgSchema = new mongoose.Schema(
         type: {
           type: String,
           required: true,
+          enum: ["packed", "loose"],
         },
         quantity: {
           type: Number,
@@ -34,7 +35,9 @@ const shgSchema = new mongoose.Schema(
         },
         manufacturingdate: {
           type: Date,
-          required: true,
+        },
+        expirydate: {
+          type: Date,
         },
       },
     ],
