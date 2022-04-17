@@ -25,6 +25,10 @@ const institutemodel = mongoose.Schema(
         "women and child development",
       ],
     },
+    departmentid: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "department",
+    },
     otp: {
       type: String,
     },
