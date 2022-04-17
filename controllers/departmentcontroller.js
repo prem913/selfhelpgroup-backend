@@ -12,6 +12,12 @@ const registerdepartment = asynchandler(async (req, res) => {
         "Please provide all the details department contact email and password",
     });
   }
+  const checkdepartment = await departmentmodel.findOne({ department });
+  if (checkdepartment) {
+    return res.status(400).json({
+      error: "Department already exists",
+    });
+  }
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
   const departmentdata = req.body;
@@ -71,8 +77,41 @@ const instituteunderdepartment = asynchandler(async (req, res) => {
   });
 });
 
+const approveorder = asynchandler(async (req, res) => {
+  const { orderid, shgId } = req.body;
+  if (!orderid || !shgId) {
+    return res.status(400).json({
+      error: "Please provide orderid and shgId",
+    });
+  }
+  const order = await Order.findById(orderid);
+  if (!order) {
+    return res.status(400).json({
+      error: "No order found with this id",
+    });
+  }
+  let shg = null;
+  shg = order.bid.map((order) => {
+    if (order.shgId == shgId) {
+      return order;
+    }
+  });
+  if (shg === undefined) {
+    return res.status(400).json({
+      error: "No shg found with this id",
+    });
+  }
+  console.log(shg);
+  order.status = "pending";
+  await order.save();
+  res.json({
+    message: "Order approved successfully",
+  });
+});
+
 module.exports = {
   registerdepartment,
   logindepartment,
   instituteunderdepartment,
+  approveorder,
 };

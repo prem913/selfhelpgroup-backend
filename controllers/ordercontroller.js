@@ -1,4 +1,5 @@
 const departmentmodel = require("../models/departmentmodel");
+const Institute = require("../models/institutemodel");
 const Order = require("../models/ordermodel");
 const asyncHandler = require("express-async-handler");
 const createorder = asyncHandler(async (req, res) => {
@@ -17,8 +18,11 @@ const createorder = asyncHandler(async (req, res) => {
     });
   }
   const orderdata = req.body;
-  orderdata.departmentid = req.user._id;
+  orderdata.institutename = req.user.name;
+  orderdata.instituteid = req.user._id;
+  orderdata.departmentid = req.user.departmentid;
   orderdata.department = req.user.department;
+  orderdata.status = "pending";
   const neworder = new Order(orderdata);
   await neworder.save();
   res.json({
@@ -42,8 +46,17 @@ const getorderbydepartment = asyncHandler(async (req, res) => {
   });
 });
 
+const getorderbyinstitute = asyncHandler(async (req, res) => {
+  const orders = await Order.find({ instituteid: req.user._id });
+  res.json({
+    message: "Orders fetched successfully",
+    orders: orders,
+  });
+});
+
 module.exports = {
   createorder,
   getallorders,
   getorderbydepartment,
+  getorderbyinstitute,
 };

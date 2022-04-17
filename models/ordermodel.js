@@ -41,6 +41,11 @@ const ordermodel = mongoose.Schema(
       type: String,
       required: true,
     },
+    status: {
+      type: String,
+      required: true,
+      enum: ["pending", "approved", "rejected"],
+    },
     bid: [
       {
         shgId: {
@@ -73,6 +78,30 @@ const ordermodel = mongoose.Schema(
         },
       },
     ],
+    approvedshg: {
+      shgId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Shg",
+      },
+      shgname: {
+        type: String,
+      },
+      shgcontact: {
+        type: String,
+      },
+      shglocation: {
+        type: String,
+      },
+      shgproduct: {
+        type: String,
+      },
+      quantity: {
+        type: Number,
+      },
+      price: {
+        type: Number,
+      },
+    },
   },
   { timestamps: true }
 );
