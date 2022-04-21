@@ -29,6 +29,10 @@ const shgSchema = new mongoose.Schema(
           type: Number,
           required: true,
         },
+        unit: {
+          type: String,
+          enum: ["kg", "dozen"],
+        },
         price: {
           type: Number,
           required: true,

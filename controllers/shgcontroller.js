@@ -81,12 +81,17 @@ const verifyOtp = asynchandler(async (req, res) => {
 });
 
 const addproducts = asynchandler(async (req, res) => {
-  const { name, type, quantity, price, manufacturingdate, expirydate } =
+  const { name, type, quantity, price, manufacturingdate, expirydate, unit } =
     req.body;
   const shgdata = await shg.findById(req.user._id);
   if (!name || !type || !quantity || !price) {
     return res.status(400).json({
-      error: "Please provide all the details name type quantity price and",
+      error: "Please provide all the details name type quantity price ",
+    });
+  }
+  if (type === "loose" && !unit) {
+    return res.status(400).json({
+      error: "Please provide unit with quantity",
     });
   }
   if (type === "packed" && (!manufacturingdate || !expirydate)) {
@@ -112,6 +117,9 @@ const addproducts = asynchandler(async (req, res) => {
   if (type === "packed") {
     data.manufacturingdate = manufacturingdate;
     data.expirydate = expirydate;
+  }
+  if (type === "loose") {
+    data.unit = unit;
   }
   shgdata.products.push(data);
   await shgdata.save();
@@ -150,6 +158,16 @@ const bid = asynchandler(async (req, res) => {
       error: "Please add product first",
     });
   }
+  if (product.type !== order.itemtype) {
+    return res.status(400).json({
+      error: "product type does not match with order type",
+    });
+  }
+  if (product.type === "loose" && product.unit !== order.itemunit) {
+    return res.status(400).json({
+      error: "product unit does not match with order unit",
+    });
+  }
   order.bid.push({
     shgId: shgdata._id,
     shgname: shgdata.name,
@@ -159,6 +177,16 @@ const bid = asynchandler(async (req, res) => {
     quantity: product.quantity,
     price: product.price,
   });
+  if (product.unit) {
+    order.bid[order.bid.length - 1].unit = product.unit;
+  }
+  if (product.manufacturingdate) {
+    order.bid[order.bid.length - 1].manufacturingdate =
+      product.manufacturingdate;
+  }
+  if (product.expirydate) {
+    order.bid[order.bid.length - 1].expirydate = product.expirydate;
+  }
   await order.save();
   res.status(200).json({
     message: "product added successfully to order",

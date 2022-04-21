@@ -76,7 +76,7 @@ const instituteunderdepartment = asynchandler(async (req, res) => {
     data: institute,
   });
 });
-
+// to be completed
 const approveorder = asynchandler(async (req, res) => {
   const { orderid, shgId } = req.body;
   if (!orderid || !shgId) {
@@ -91,18 +91,15 @@ const approveorder = asynchandler(async (req, res) => {
     });
   }
   let shg = null;
-  shg = order.bid.map((order) => {
-    if (order.shgId == shgId) {
-      return order;
-    }
+  shg = order.bid.find((order) => {
+    order.shgId == shgId;
   });
-  if (shg === undefined) {
+  if (!shg) {
     return res.status(400).json({
       error: "No shg found with this id",
     });
   }
-  console.log(shg);
-  order.status = "pending";
+  order.status = "approved";
   await order.save();
   res.json({
     message: "Order approved successfully",

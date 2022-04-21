@@ -20,6 +20,10 @@ const ordermodel = mongoose.Schema(
       type: String,
       required: true,
     },
+    institutelocation: {
+      type: String,
+      required: true,
+    },
     itemtype: {
       type: String,
       required: true,
@@ -32,6 +36,10 @@ const ordermodel = mongoose.Schema(
     itemquantity: {
       type: Number,
       required: true,
+    },
+    itemunit: {
+      type: String,
+      enum: ["kg", "dozen"],
     },
     itemprice: {
       type: Number,
@@ -72,9 +80,14 @@ const ordermodel = mongoose.Schema(
           type: Number,
           required: true,
         },
-        price: {
-          type: Number,
-          required: true,
+        manufacturingdate: {
+          type: Date,
+        },
+        expirydate: {
+          type: Date,
+        },
+        unit: {
+          type: String,
         },
       },
     ],
