@@ -10,5 +10,6 @@ const {
 router.post("/register", registerdepartment);
 router.post("/login", logindepartment);
 router.get("/institute", protectdepartment, instituteunderdepartment);
+//to be completed
 // router.post("/approveorder", protectdepartment, approveorder);
 module.exports = router;
