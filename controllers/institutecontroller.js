@@ -2,28 +2,28 @@ const Institute = require("../models/institutemodel");
 const departmentmodel = require("../models/departmentmodel");
 const asyncHandler = require("express-async-handler");
 const { createJwtToken } = require("../utils/token");
-const bcrypt = require("bcryptjs")
+const bcrypt = require("bcryptjs");
 const registerinstitute = asyncHandler(async (req, res) => {
-  const { name, location, contact, department,email,password } = req.body;
-  if (!name || !location || !contact || !department) {
+  const { name, location, contact, department, email, password } = req.body;
+  if (!name || !location || !contact || !department || !email || !password) {
     return res.status(400).json({
       error:
-        "Please provide all the required fields name location contact department",
+        "Please provide all the required fields name location contact department email and password",
     });
   }
-  const isregistered = await Institute.findOne({email});
-  if(isregistered){
+  const isregistered = await Institute.findOne({ email });
+  if (isregistered) {
     res.json({
-      success:false,
-      message:"email is already registered"
-    })
+      success: false,
+      message: "email is already registered",
+    });
     return;
   }
   const departmentdata = await departmentmodel.findOne({ department });
-  if(!departmentdata){
+  if (!departmentdata) {
     res.json({
-      message:"department not found"
-    })
+      message: "department not found",
+    });
     return;
   }
   const salt = await bcrypt.genSalt(10);
@@ -35,7 +35,7 @@ const registerinstitute = asyncHandler(async (req, res) => {
     department,
     departmentid: departmentdata._id,
     email,
-    password:hashedPassword
+    password: hashedPassword,
   });
   await institute.save();
   res.status(200).json({
@@ -44,36 +44,35 @@ const registerinstitute = asyncHandler(async (req, res) => {
   });
 });
 
-const institutelogin = asyncHandler(async (req, res) => {
-  const { email,password } = req.body;
-  if (!email || !password) {
-    res.status(400).json({
-      error: "Please provide all the details email and password",
-    });
-    return;
-  }
-  const institutedata = await Institute.findOne({ email });
+// const institutelogin = asyncHandler(async (req, res) => {
+//   const { email,password } = req.body;
+//   if (!email || !password) {
+//     res.status(400).json({
+//       error: "Please provide all the details email and password",
+//     });
+//     return;
+//   }
+//   const institutedata = await Institute.findOne({ email });
 
-  if (!institutedata) {
-    res.status(400).json({
-      message: "Institute Not Found!",
-    });
-    return;
-  }
-  const isMatch = await bcrypt.compare(password, institutedata.password);
-  if (!isMatch) {
-    res.status(400).json({
-      error: "Incorrect password",
-    });
-  }
-  const token = createJwtToken({ instituteId:institutedata._id });
-  res.json({
-    message: "Login successful",
-    token: token,
-  });
+//   if (!institutedata) {
+//     res.status(400).json({
+//       message: "Institute Not Found!",
+//     });
+//     return;
+//   }
+//   const isMatch = await bcrypt.compare(password, institutedata.password);
+//   if (!isMatch) {
+//     res.status(400).json({
+//       error: "Incorrect password",
+//     });
+//   }
+//   const token = createJwtToken({ instituteId:institutedata._id });
+//   res.json({
+//     message: "Login successful",
+//     token: token,
+//   });
 
-
-});
+// });
 
 // const instituteVerifyOtp = asyncHandler(async (req, res) => {
 //   const { instituteId, otp } = req.body;
@@ -113,4 +112,4 @@ const institutelogin = asyncHandler(async (req, res) => {
 //     token: jwt,
 //   });
 // });
-module.exports = { registerinstitute, institutelogin };
+module.exports = { registerinstitute };

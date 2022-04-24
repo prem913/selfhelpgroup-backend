@@ -54,6 +54,11 @@ const ordermodel = mongoose.Schema(
       required: true,
       enum: ["pending", "approved", "rejected"],
     },
+    approvedfordisplay: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
     bid: [
       {
         shgId: {

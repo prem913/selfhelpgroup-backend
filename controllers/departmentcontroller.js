@@ -39,13 +39,36 @@ const logindepartment = asynchandler(async (req, res) => {
   }
   const department = await departmentmodel.findOne({ email });
   if (!department) {
-    res.status(400).json({
-      error: "No department found with this email",
+    const institute = await Institute.findOne({ email });
+    if (!institute) {
+      return res.status(400).json({
+        error: "No account registered with this email",
+      });
+    }
+    const isMatch = await bcrypt.compare(password, institute.password);
+    if (!isMatch) {
+      return res.status(400).json({
+        error: "Incorrect password",
+      });
+    }
+    const token = jwt.sign(
+      {
+        instituteId: institute._id,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "30d",
+      }
+    );
+    return res.json({
+      message: "Login successful",
+      token: token,
+      usertype: "institute",
     });
   }
   const isMatch = await bcrypt.compare(password, department.password);
   if (!isMatch) {
-    res.status(400).json({
+    return res.status(400).json({
       error: "Incorrect password",
     });
   }
@@ -61,6 +84,7 @@ const logindepartment = asynchandler(async (req, res) => {
   res.json({
     message: "Login successful",
     token: token,
+    usertype: department.usertype,
   });
 });
 
@@ -139,10 +163,41 @@ const getshgdata = asynchandler(async (req, res) => {
   });
 });
 
+const approvefordisplay = asynchandler(async (req, res) => {
+  const { orderid, shgId } = req.body;
+  if (!orderid) {
+    return res.status(400).json({
+      error: "Please provide orderid",
+    });
+  }
+  const order = await Order.findById(orderid);
+  if (!order) {
+    return res.status(400).json({
+      error: "No order found with this id",
+    });
+  }
+  if (order.department !== req.user.department) {
+    return res.status(400).json({
+      error: "You are not authorized to approve this order",
+    });
+  }
+  if (order.approvefordisplay === true) {
+    return res.status(400).json({
+      error: "Order already approved",
+    });
+  }
+  order.approvedfordisplay = true;
+  await order.save();
+  res.json({
+    message: "Order approved for display",
+  });
+});
+
 module.exports = {
   registerdepartment,
   logindepartment,
   instituteunderdepartment,
   approveorder,
   getshgdata,
+  approvefordisplay,
 };

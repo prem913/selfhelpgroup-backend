@@ -16,6 +16,10 @@ const protectdepartment = asyncHandler(async (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       //Get user from token
       req.user = await departmentmodel.findById(decoded.id).select("-password");
+      if (!req.user) {
+        res.status(401);
+        throw new Error("Not Authorized");
+      }
       next();
     } catch (error) {
       console.log(error);

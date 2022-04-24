@@ -128,10 +128,10 @@ const addproducts = asynchandler(async (req, res) => {
 });
 
 const bid = asynchandler(async (req, res) => {
-  const { orderid } = req.body;
-  if (!orderid) {
+  const { orderid, quantity } = req.body;
+  if (!orderid || !quantity) {
     return res.status(400).json({
-      error: "Please provide orderid",
+      error: "Please provide orderid and quantity",
     });
   }
   const order = await Order.findById(orderid);
@@ -167,13 +167,18 @@ const bid = asynchandler(async (req, res) => {
       error: "product unit does not match with order unit",
     });
   }
+  if (quantity > product.quantity) {
+    return res.status(400).json({
+      error: "You do not have this quantity in your inventory",
+    });
+  }
   order.bid.push({
     shgId: shgdata._id,
     shgname: shgdata.name,
     shgcontact: shgdata.contact,
     shglocation: shgdata.location,
     shgproduct: product.name,
-    quantity: product.quantity,
+    quantity: quantity,
   });
   if (product.unit) {
     order.bid[order.bid.length - 1].unit = product.unit;
@@ -284,6 +289,16 @@ const deleteproduct = asynchandler(async (req, res) => {
   });
 });
 
+const getapprovedproducts = asynchandler(async (req, res) => {
+  const shgdata = await shg.findById(req.user._id);
+  const products = shgdata.products.filter(
+    (product) => product.orderstatus === "approved"
+  );
+  res.status(200).json({
+    products: products,
+  });
+});
+
 module.exports = {
   registershg,
   shglogin,
@@ -293,4 +308,5 @@ module.exports = {
   getproducts,
   updateproduct,
   deleteproduct,
+  getapprovedproducts,
 };
