@@ -33,15 +33,18 @@ const shgSchema = new mongoose.Schema(
           type: String,
           enum: ["kg", "dozen"],
         },
-        price: {
-          type: Number,
-          required: true,
-        },
         manufacturingdate: {
           type: Date,
         },
         expirydate: {
           type: Date,
+        },
+        bidorderid: {
+          type: mongoose.Schema.Types.ObjectId,
+        },
+        orderstatus: {
+          type: String,
+          enum: ["pending", "approved"],
         },
       },
     ],

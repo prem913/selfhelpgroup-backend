@@ -6,10 +6,11 @@ const {
   logindepartment,
   instituteunderdepartment,
   approveorder,
+  getshgdata,
 } = require("../controllers/departmentcontroller");
 router.post("/register", registerdepartment);
 router.post("/login", logindepartment);
 router.get("/institute", protectdepartment, instituteunderdepartment);
-//to be completed
-// router.post("/approveorder", protectdepartment, approveorder);
+router.post("/approveorder", protectdepartment, approveorder);
+router.get("/getshgdata", protectdepartment, getshgdata);
 module.exports = router;

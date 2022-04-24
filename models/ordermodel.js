@@ -89,32 +89,12 @@ const ordermodel = mongoose.Schema(
         unit: {
           type: String,
         },
+        approved: {
+          type: Boolean,
+          default: false,
+        },
       },
     ],
-    approvedshg: {
-      shgId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Shg",
-      },
-      shgname: {
-        type: String,
-      },
-      shgcontact: {
-        type: String,
-      },
-      shglocation: {
-        type: String,
-      },
-      shgproduct: {
-        type: String,
-      },
-      quantity: {
-        type: Number,
-      },
-      price: {
-        type: Number,
-      },
-    },
   },
   { timestamps: true }
 );

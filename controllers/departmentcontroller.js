@@ -2,6 +2,7 @@ const asynchandler = require("express-async-handler");
 const departmentmodel = require("../models/departmentmodel");
 const Order = require("../models/ordermodel");
 const Institute = require("../models/institutemodel");
+const shg = require("../models/shgmodel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const registerdepartment = asynchandler(async (req, res) => {
@@ -76,7 +77,7 @@ const instituteunderdepartment = asynchandler(async (req, res) => {
     data: institute,
   });
 });
-// to be completed
+
 const approveorder = asynchandler(async (req, res) => {
   const { orderid, shgId } = req.body;
   if (!orderid || !shgId) {
@@ -90,19 +91,51 @@ const approveorder = asynchandler(async (req, res) => {
       error: "No order found with this id",
     });
   }
-  let shg = null;
-  shg = order.bid.find((order) => {
-    order.shgId == shgId;
-  });
-  if (!shg) {
+  if (order.department !== req.user.department) {
+    return res.status(400).json({
+      error: "You are not authorized to approve this order",
+    });
+  }
+  if (order.status === "approved") {
+    return res.status(400).json({
+      error: "Order already approved",
+    });
+  }
+  const shgfind = order.bid.find((order) => order.shgId.toString() === shgId);
+  if (!shgfind) {
     return res.status(400).json({
       error: "No shg found with this id",
     });
   }
+  shgfind.approved = true;
+  const shgdata = await shg.findById(shgId);
+  const shgproduct = shgdata.products.find(
+    (product) => product.name == order.itemname
+  );
+  if (shgproduct.orderstatus === "approved") {
+    return res.status(400).json({
+      error: "SHG product already approved",
+    });
+  }
+  shgproduct.orderstatus = "approved";
   order.status = "approved";
   await order.save();
+  await shgdata.save();
   res.json({
     message: "Order approved successfully",
+  });
+});
+
+const getshgdata = asynchandler(async (req, res) => {
+  if (req.user.department !== "ceo") {
+    return res.status(400).json({
+      error: "You are not authorized to view this data",
+    });
+  }
+  const shgdata = await shg.find({});
+  res.json({
+    message: "SHG data",
+    data: shgdata,
   });
 });
 
@@ -111,4 +144,5 @@ module.exports = {
   logindepartment,
   instituteunderdepartment,
   approveorder,
+  getshgdata,
 };
