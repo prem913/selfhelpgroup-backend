@@ -1,6 +1,8 @@
 const Order = require("../models/ordermodel");
 const shg = require("../models/shgmodel");
 const asyncHandler = require("express-async-handler");
+const itemsmodel = require("../models/itemsmodel");
+const res = require("express/lib/response");
 const createorder = asyncHandler(async (req, res) => {
   const items = req.body;
   items.map(( {
@@ -103,10 +105,38 @@ const deleteorder = asyncHandler(async (req, res) => {
   // await order.remove();
 });
 
+const getallitems = asyncHandler(async(req,res)=>{
+  const items = await itemsmodel.find().select("-__v");
+  res.status(200).json(items);
+});
+
+const additems = asyncHandler(async(req,res)=>{
+  const {itemtype,itemdescription,itemunit,itemname} = req.body;
+
+  if(!itemname || !itemdescription || !itemunit || !itemtype){
+    res.status(400).json({
+      message:"provide all details",
+    })
+    return;
+  }
+  const item = {
+    itemtype,itemdescription,itemunit,itemname
+  };
+  const newitem = new itemsmodel(item);
+  await newitem.save();
+
+  res.status(200).json({
+    message:"done"
+  });
+
+})
+
 module.exports = {
   createorder,
   getallorders,
   getorderbydepartment,
   getorderbyinstitute,
   deleteorder,
+  getallitems,
+  additems
 };
