@@ -64,16 +64,16 @@ const verifyOtp = asynchandler(async (req, res) => {
   }
   const datenow = new Date().getTime();
   const update = new Date(shgdata.updatedAt).getTime();
-  if (datenow - update > 30 * 60 * 1000) {
-    res.status(400).json({
-      message: "otp expired login again!",
-    });
-    return;
-  }
+  // if (datenow - update > 30 * 60 * 1000) {
+  //   res.status(400).json({
+  //     message: "otp expired login again!",
+  //   });
+  //   return;
+  // }
 
   shgdata.otp = "";
   await shgdata.save();
-  const token = createJwtToken({ shgId: shgdata._id });
+  const token = createJwtToken({ shgId: shgdata._id }, { expiresIn: "30d" });
   res.status(200).json({
     token,
     message: "successfully logged in",

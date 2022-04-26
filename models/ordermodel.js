@@ -52,7 +52,7 @@ const ordermodel = mongoose.Schema(
     status: {
       type: String,
       required: true,
-      enum: ["pending", "approved", "rejected"],
+      enum: ["pending", "approved", "cancelled"],
     },
     approvedfordisplay: {
       type: Boolean,
