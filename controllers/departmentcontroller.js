@@ -142,6 +142,9 @@ const approveorder = asynchandler(async (req, res) => {
     });
   }
   shgproduct.orderstatus = "approved";
+  shgproduct.department = req.user.department;
+  shgproduct.institutename = order.institutename;
+  shgproduct.institutelocation = order.institutelocation;
   order.status = "approved";
   await order.save();
   await shgdata.save();
@@ -193,6 +196,32 @@ const approvefordisplay = asynchandler(async (req, res) => {
   });
 });
 
+const profile = asynchandler(async (req, res) => {
+  try {
+    if (req.institute) {
+      const institute = await Institute.findById(req.institute._id).select(
+        "-password"
+      );
+      res.json({
+        message: "Institute profile",
+        data: institute,
+      });
+    }
+    if (req.department) {
+      const department = await departmentmodel
+        .findById(req.department._id)
+        .select("-password");
+      res.json({
+        message: "Department profile",
+        data: department,
+      });
+    }
+  } catch (err) {
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+});
 module.exports = {
   registerdepartment,
   logindepartment,
@@ -200,4 +229,5 @@ module.exports = {
   approveorder,
   getshgdata,
   approvefordisplay,
+  profile,
 };

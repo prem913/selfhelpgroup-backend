@@ -294,6 +294,7 @@ const getapprovedproducts = asynchandler(async (req, res) => {
   const products = shgdata.products.filter(
     (product) => product.orderstatus === "approved"
   );
+
   res.status(200).json({
     products: products,
   });

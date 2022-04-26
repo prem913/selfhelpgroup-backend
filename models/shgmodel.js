@@ -46,6 +46,15 @@ const shgSchema = new mongoose.Schema(
           type: String,
           enum: ["pending", "approved"],
         },
+        department: {
+          type: String,
+        },
+        institutename: {
+          type: String,
+        },
+        institutelocation: {
+          type: String,
+        },
       },
     ],
     otp: String,
