@@ -11,7 +11,14 @@ const departmentmodel = mongoose.Schema(
         "tribal welfare",
         "social welfare",
         "women and child development",
+        "ceo",
       ],
+    },
+    usertype: {
+      type: String,
+      required: true,
+      enum: ["department", "ceo"],
+      default: "department",
     },
     contact: {
       type: String,

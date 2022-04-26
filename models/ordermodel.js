@@ -24,6 +24,8 @@ const ordermodel = mongoose.Schema(
       type: String,
       required: true,
     },
+    items:[
+    {
     itemtype: {
       type: String,
       required: true,
@@ -49,10 +51,17 @@ const ordermodel = mongoose.Schema(
       type: String,
       required: true,
     },
+  }
+],
     status: {
       type: String,
       required: true,
-      enum: ["pending", "approved", "rejected"],
+      enum: ["pending", "approved", "cancelled"],
+    },
+    approvedfordisplay: {
+      type: Boolean,
+      required: true,
+      default: false,
     },
     bid: [
       {
@@ -89,32 +98,12 @@ const ordermodel = mongoose.Schema(
         unit: {
           type: String,
         },
+        approved: {
+          type: Boolean,
+          default: false,
+        },
       },
     ],
-    approvedshg: {
-      shgId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Shg",
-      },
-      shgname: {
-        type: String,
-      },
-      shgcontact: {
-        type: String,
-      },
-      shglocation: {
-        type: String,
-      },
-      shgproduct: {
-        type: String,
-      },
-      quantity: {
-        type: Number,
-      },
-      price: {
-        type: Number,
-      },
-    },
   },
   { timestamps: true }
 );

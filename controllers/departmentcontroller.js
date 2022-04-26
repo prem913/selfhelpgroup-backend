@@ -2,6 +2,7 @@ const asynchandler = require("express-async-handler");
 const departmentmodel = require("../models/departmentmodel");
 const Order = require("../models/ordermodel");
 const Institute = require("../models/institutemodel");
+const shg = require("../models/shgmodel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const registerdepartment = asynchandler(async (req, res) => {
@@ -38,13 +39,36 @@ const logindepartment = asynchandler(async (req, res) => {
   }
   const department = await departmentmodel.findOne({ email });
   if (!department) {
-    res.status(400).json({
-      error: "No department found with this email",
+    const institute = await Institute.findOne({ email });
+    if (!institute) {
+      return res.status(400).json({
+        error: "No account registered with this email",
+      });
+    }
+    const isMatch = await bcrypt.compare(password, institute.password);
+    if (!isMatch) {
+      return res.status(400).json({
+        error: "Incorrect password",
+      });
+    }
+    const token = jwt.sign(
+      {
+        instituteId: institute._id,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "30d",
+      }
+    );
+    return res.json({
+      message: "Login successful",
+      token: token,
+      usertype: "institute",
     });
   }
   const isMatch = await bcrypt.compare(password, department.password);
   if (!isMatch) {
-    res.status(400).json({
+    return res.status(400).json({
       error: "Incorrect password",
     });
   }
@@ -60,6 +84,7 @@ const logindepartment = asynchandler(async (req, res) => {
   res.json({
     message: "Login successful",
     token: token,
+    usertype: department.usertype,
   });
 });
 
@@ -76,7 +101,7 @@ const instituteunderdepartment = asynchandler(async (req, res) => {
     data: institute,
   });
 });
-// to be completed
+
 const approveorder = asynchandler(async (req, res) => {
   const { orderid, shgId } = req.body;
   if (!orderid || !shgId) {
@@ -90,25 +115,119 @@ const approveorder = asynchandler(async (req, res) => {
       error: "No order found with this id",
     });
   }
-  let shg = null;
-  shg = order.bid.find((order) => {
-    order.shgId == shgId;
-  });
-  if (!shg) {
+  if (order.department !== req.user.department) {
+    return res.status(400).json({
+      error: "You are not authorized to approve this order",
+    });
+  }
+  if (order.status === "approved") {
+    return res.status(400).json({
+      error: "Order already approved",
+    });
+  }
+  const shgfind = order.bid.find((order) => order.shgId.toString() === shgId);
+  if (!shgfind) {
     return res.status(400).json({
       error: "No shg found with this id",
     });
   }
+  shgfind.approved = true;
+  const shgdata = await shg.findById(shgId);
+  const shgproduct = shgdata.products.find(
+    (product) => product.name == order.itemname
+  );
+  if (shgproduct.orderstatus === "approved") {
+    return res.status(400).json({
+      error: "SHG product already approved",
+    });
+  }
+  shgproduct.orderstatus = "approved";
+  shgproduct.department = req.user.department;
+  shgproduct.institutename = order.institutename;
+  shgproduct.institutelocation = order.institutelocation;
   order.status = "approved";
   await order.save();
+  await shgdata.save();
   res.json({
     message: "Order approved successfully",
   });
 });
 
+const getshgdata = asynchandler(async (req, res) => {
+  if (req.user.department !== "ceo") {
+    return res.status(400).json({
+      error: "You are not authorized to view this data",
+    });
+  }
+  const shgdata = await shg.find({});
+  res.json({
+    message: "SHG data",
+    data: shgdata,
+  });
+});
+
+const approvefordisplay = asynchandler(async (req, res) => {
+  const { orderid, shgId } = req.body;
+  if (!orderid) {
+    return res.status(400).json({
+      error: "Please provide orderid",
+    });
+  }
+  const order = await Order.findById(orderid);
+  if (!order) {
+    return res.status(400).json({
+      error: "No order found with this id",
+    });
+  }
+  if (order.department !== req.user.department) {
+    return res.status(400).json({
+      error: "You are not authorized to approve this order",
+    });
+  }
+  if (order.approvefordisplay === true) {
+    return res.status(400).json({
+      error: "Order already approved",
+    });
+  }
+  order.approvedfordisplay = true;
+  await order.save();
+  res.json({
+    message: "Order approved for display",
+  });
+});
+
+const profile = asynchandler(async (req, res) => {
+  try {
+    if (req.institute) {
+      const institute = await Institute.findById(req.institute._id).select(
+        "-password"
+      );
+      res.json({
+        message: "Institute profile",
+        data: institute,
+      });
+    }
+    if (req.department) {
+      const department = await departmentmodel
+        .findById(req.department._id)
+        .select("-password");
+      res.json({
+        message: "Department profile",
+        data: department,
+      });
+    }
+  } catch (err) {
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+});
 module.exports = {
   registerdepartment,
   logindepartment,
   instituteunderdepartment,
   approveorder,
+  getshgdata,
+  approvefordisplay,
+  profile,
 };

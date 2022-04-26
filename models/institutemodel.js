@@ -29,8 +29,13 @@ const institutemodel = mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "department",
     },
-    otp: {
+    email: {
       type: String,
+      required: true,
+    },
+    password: {
+      type: String,
+      required: true,
     },
   },
   { timestamps: true }
