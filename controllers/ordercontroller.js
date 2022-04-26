@@ -2,14 +2,15 @@ const Order = require("../models/ordermodel");
 const shg = require("../models/shgmodel");
 const asyncHandler = require("express-async-handler");
 const createorder = asyncHandler(async (req, res) => {
-  const {
+  const items = req.body;
+  items.map(( {
     itemtype,
     itemname,
     itemquantity,
     itemprice,
     itemdescription,
     itemunit,
-  } = req.body;
+  }) =>{
   if (
     !itemtype ||
     !itemname ||
@@ -26,7 +27,7 @@ const createorder = asyncHandler(async (req, res) => {
     return res.status(400).json({
       error: "Please provide unit with quantity",
     });
-  }
+  }});
   const orderdata = req.body;
   orderdata.institutename = req.user.name;
   orderdata.instituteid = req.user._id;
@@ -34,6 +35,7 @@ const createorder = asyncHandler(async (req, res) => {
   orderdata.department = req.user.department;
   orderdata.institutelocation = req.user.location;
   orderdata.status = "pending";
+  orderdata.items=items;
   const neworder = new Order(orderdata);
   await neworder.save();
   res.json({

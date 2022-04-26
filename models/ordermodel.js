@@ -24,6 +24,8 @@ const ordermodel = mongoose.Schema(
       type: String,
       required: true,
     },
+    items:[
+    {
     itemtype: {
       type: String,
       required: true,
@@ -49,6 +51,8 @@ const ordermodel = mongoose.Schema(
       type: String,
       required: true,
     },
+  }
+],
     status: {
       type: String,
       required: true,
