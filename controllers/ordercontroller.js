@@ -2,58 +2,80 @@ const Order = require("../models/ordermodel");
 const shg = require("../models/shgmodel");
 const asyncHandler = require("express-async-handler");
 const itemsmodel = require("../models/itemsmodel");
-const res = require("express/lib/response");
 const createorder = asyncHandler(async (req, res) => {
-  const items = req.body;
-  items.map(( {
-    itemtype,
-    itemname,
-    itemquantity,
-    itemprice,
-    itemdescription,
-    itemunit,
-  }) =>{
-  if (
-    !itemtype ||
-    !itemname ||
-    !itemquantity ||
-    !itemprice ||
-    !itemdescription
-  ) {
-    return res.status(400).json({
-      error:
-        "Please provide all the details type name quantity price and description",
+  try {
+    const orderdata = new Order();
+    const items = req.body;
+    items.forEach((item) => {
+      if (!item.itemid && !item.itemquantity) {
+        console.log("executed");
+        return res.status(400).json({
+          error: "Please provide all the details itemid and quantity",
+        });
+      }
+      // if (itemtype === "loose" && !itemunit) {
+      //   return res.status(400).json({
+      //     error: "Please provide unit with quantity",
+      //   });
+      // }
     });
+    orderdata.institutename = req.user.name;
+    orderdata.instituteid = req.user._id;
+    orderdata.departmentid = req.user.departmentid;
+    orderdata.department = req.user.department;
+    orderdata.institutelocation = req.user.location;
+    orderdata.status = "pending";
+    await orderdata.save();
+    // orderdata.items = itemdata;
+    await items.forEach(async ({ itemid, itemquantity }) => {
+      const item = await itemsmodel.findById(itemid);
+      if (!item) {
+        return res.status(400).json({
+          error: "Item not found",
+        });
+      }
+      await Order.findByIdAndUpdate(orderdata._id, {
+        $push: {
+          items: {
+            itemid: itemid,
+            itemname: item.itemname,
+            itemtype: item.itemtype,
+            itemdescription: item.itemdescription,
+            itemprice: item.itemprice,
+            itemunit: item.itemunit,
+            itemquantity: itemquantity,
+          },
+        },
+      });
+    });
+
+    res.json({
+      message: "Order registered successfully",
+    });
+  } catch (err) {
+    console.log(err);
   }
-  if (itemtype === "loose" && !itemunit) {
-    return res.status(400).json({
-      error: "Please provide unit with quantity",
-    });
-  }});
-  const orderdata = req.body;
-  orderdata.institutename = req.user.name;
-  orderdata.instituteid = req.user._id;
-  orderdata.departmentid = req.user.departmentid;
-  orderdata.department = req.user.department;
-  orderdata.institutelocation = req.user.location;
-  orderdata.status = "pending";
-  orderdata.items=items;
-  const neworder = new Order(orderdata);
-  await neworder.save();
-  res.json({
-    message: "Order registered successfully",
-  });
 });
 
 const getallorders = asyncHandler(async (req, res) => {
   const orders = await Order.find({ approvedfordisplay: true });
   const orderdata = [];
-  orders.filter((order) => {
-    req.user.products.forEach((product) => {
-      if (order.itemname === product.name) {
-        orderdata.push(order);
-        return;
-      }
+  // orders.filter((order) => {
+  //   req.user.products.forEach((product) => {
+  //     if (order.itemname === product.name) {
+  //       orderdata.push(order);
+  //       return;
+  //     }
+  //   });
+  // });
+  req.user.products.forEach((product) => {
+    orders.forEach((order) => {
+      order.items.forEach((item) => {
+        if (item.itemname === product.name) {
+          orderdata.push(order);
+          return;
+        }
+      });
     });
   });
   res.json({
@@ -105,31 +127,40 @@ const deleteorder = asyncHandler(async (req, res) => {
   // await order.remove();
 });
 
-const getallitems = asyncHandler(async(req,res)=>{
+const getallitems = asyncHandler(async (req, res) => {
   const items = await itemsmodel.find().select("-__v");
   res.status(200).json(items);
 });
 
-const additems = asyncHandler(async(req,res)=>{
-  const {itemtype,itemdescription,itemunit,itemname} = req.body;
+const additems = asyncHandler(async (req, res) => {
+  const { itemtype, itemdescription, itemunit, itemname, itemprice } = req.body;
 
-  if(!itemname || !itemdescription || !itemunit || !itemtype){
+  if (!itemname || !itemdescription || !itemtype || !itemprice) {
     res.status(400).json({
-      message:"provide all details",
-    })
+      message: "provide all details",
+    });
+    return;
+  }
+  if (itemtype === "loose" && !itemunit) {
+    res.status(400).json({
+      message: "provide unit with quantity for loose type products",
+    });
     return;
   }
   const item = {
-    itemtype,itemdescription,itemunit,itemname
+    itemtype,
+    itemdescription,
+    itemname,
+    itemunit,
+    itemprice,
   };
   const newitem = new itemsmodel(item);
   await newitem.save();
 
   res.status(200).json({
-    message:"done"
+    message: "done",
   });
-
-})
+});
 
 module.exports = {
   createorder,
@@ -138,5 +169,5 @@ module.exports = {
   getorderbyinstitute,
   deleteorder,
   getallitems,
-  additems
+  additems,
 };

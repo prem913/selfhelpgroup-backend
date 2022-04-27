@@ -24,35 +24,40 @@ const ordermodel = mongoose.Schema(
       type: String,
       required: true,
     },
-    items:[
-    {
-    itemtype: {
-      type: String,
-      required: true,
-      enum: ["packed", "loose"],
-    },
-    itemname: {
-      type: String,
-      required: true,
-    },
-    itemquantity: {
-      type: Number,
-      required: true,
-    },
-    itemunit: {
-      type: String,
-      enum: ["kg", "dozen"],
-    },
-    itemprice: {
-      type: Number,
-      required: true,
-    },
-    itemdescription: {
-      type: String,
-      required: true,
-    },
-  }
-],
+    items: [
+      {
+        itemid: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Items",
+          required: true,
+        },
+        itemtype: {
+          type: String,
+          required: true,
+          enum: ["packed", "loose"],
+        },
+        itemname: {
+          type: String,
+          required: true,
+        },
+        itemquantity: {
+          type: Number,
+          required: true,
+        },
+        itemunit: {
+          type: String,
+          enum: ["kg", "dozen"],
+        },
+        itemprice: {
+          type: Number,
+          required: true,
+        },
+        itemdescription: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
     status: {
       type: String,
       required: true,
