@@ -11,6 +11,14 @@ dbconnect();
 app.get("/", (req, res) => {
   res.send("Server Running");
 });
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+  );
+  return next();
+});
 //routes
 app.use("/shg", require("./routes/shgroute"));
 app.use("/department", require("./routes/departmentroute"));

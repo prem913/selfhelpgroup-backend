@@ -5,10 +5,10 @@ const itemsmodel = require("../models/itemsmodel");
 const createorder = asyncHandler(async (req, res) => {
   try {
     const orderdata = new Order();
+    console.log(req.body);
     const items = req.body;
     items.forEach((item) => {
       if (!item.itemid && !item.itemquantity) {
-        console.log("executed");
         return res.status(400).json({
           error: "Please provide all the details itemid and quantity",
         });
@@ -58,7 +58,11 @@ const createorder = asyncHandler(async (req, res) => {
 });
 
 const getallorders = asyncHandler(async (req, res) => {
-  const orders = await Order.find({ approvedfordisplay: true });
+  const orders = await Order.find({ status: "approved" });
+  orders.sort((a, b) => {
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
   const orderdata = [];
   // orders.filter((order) => {
   //   req.user.products.forEach((product) => {
@@ -86,6 +90,9 @@ const getallorders = asyncHandler(async (req, res) => {
 
 const getorderbydepartment = asyncHandler(async (req, res) => {
   const orders = await Order.find({ departmentid: req.user._id });
+  orders.sort((a, b) => {
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
   res.json({
     message: "Orders fetched successfully",
     orders: orders,
@@ -94,6 +101,9 @@ const getorderbydepartment = asyncHandler(async (req, res) => {
 
 const getorderbyinstitute = asyncHandler(async (req, res) => {
   const orders = await Order.find({ instituteid: req.user._id });
+  orders.sort((a, b) => {
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
   res.json({
     message: "Orders fetched successfully",
     orders: orders,

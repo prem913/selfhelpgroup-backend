@@ -141,6 +141,13 @@ const bid = asynchandler(async (req, res) => {
       error: "order not found",
     });
   }
+  order.bid.forEach((bid) => {
+    if (bid.shgId.toString() === shgdata._id.toString()) {
+      return res.status(400).json({
+        error: "you have already bid for this order",
+      });
+    }
+  });
   product.forEach((item) => {
     if (!item.productid || !item.quantity) {
       return res.status(400).json({
@@ -155,6 +162,12 @@ const bid = asynchandler(async (req, res) => {
         error: "order product not found",
       });
     }
+  });
+  const productsdata = [];
+  product.forEach(async (item) => {
+    const orderproduct = order.items.find(
+      (product) => product._id.toString() === item.productid
+    );
     const product = shgdata.products.find(
       (product) => product.name === orderproduct.itemname
     );
@@ -183,34 +196,36 @@ const bid = asynchandler(async (req, res) => {
         error: "you have already added product for this order",
       });
     }
-    order.bid.push({
-      shgId: shgdata._id,
-      shgname: shgdata.name,
-      shgcontact: shgdata.contact,
-      shglocation: shgdata.location,
+    productsdata.push({
       shgproduct: product.name,
       quantity: item.quantity,
     });
     if (product.unit) {
-      order.bid[order.bid.length - 1].unit = product.unit;
+      productsdata[productsdata.length - 1].unit = product.unit;
     }
     if (product.manufacturingdate) {
-      order.bid[order.bid.length - 1].manufacturingdate =
+      productsdata[productsdata.length - 1].manufacturingdate =
         product.manufacturingdate;
     }
     if (product.expirydate) {
-      order.bid[order.bid.length - 1].expirydate = product.expirydate;
+      productsdata[productsdata.length - 1].expirydate = product.expirydate;
     }
     product.bidorderid = orderid;
     product.orderstatus = "pending";
   });
-
   // if (quantity > product.quantity) {
   //   return res.status(400).json({
   //     error: "You do not have this quantity in your inventory",
   //   });
   // }
-
+  order.bid.push({
+    shgId: shgdata._id,
+    shgname: shgdata.name,
+    shgcontact: shgdata.contact,
+    shglocation: shgdata.location,
+    products: productsdata,
+    status: "pending",
+  });
   await shgdata.save();
   await order.save();
   res.status(200).json({
@@ -310,15 +325,19 @@ const deleteproduct = asynchandler(async (req, res) => {
 
 const getapprovedproducts = asynchandler(async (req, res) => {
   const shgdata = await shg.findById(req.user._id);
-  const products = shgdata.products.filter(
-    (product) => product.orderstatus === "approved"
-  );
-
   res.status(200).json({
-    products: products,
+    products: shgdata.orders,
   });
 });
 
+const getprofile = asynchandler(async (req, res) => {
+  const shgdata = await shg.findById(req.user._id);
+  res.status(200).json({
+    name: shgdata.name,
+    contact: shgdata.contact,
+    location: shgdata.location,
+  });
+});
 module.exports = {
   registershg,
   shglogin,
@@ -329,4 +348,5 @@ module.exports = {
   updateproduct,
   deleteproduct,
   getapprovedproducts,
+  getprofile,
 };

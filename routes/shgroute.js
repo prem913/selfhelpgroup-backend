@@ -11,6 +11,7 @@ const {
   updateproduct,
   deleteproduct,
   getapprovedproducts,
+  getprofile,
 } = require("../controllers/shgcontroller");
 router.post("/register", registershg);
 router.post("/login", shglogin);
@@ -21,4 +22,5 @@ router.post("/bid", protectshg, bid);
 router.put("/updateproduct", protectshg, updateproduct);
 router.delete("/deleteproduct", protectshg, deleteproduct);
 router.get("/getapprovedproducts", protectshg, getapprovedproducts);
+router.get("/profile", protectshg, getprofile);
 module.exports = router;

@@ -61,52 +61,65 @@ const ordermodel = mongoose.Schema(
     status: {
       type: String,
       required: true,
-      enum: ["pending", "approved", "cancelled"],
-    },
-    approvedfordisplay: {
-      type: Boolean,
-      required: true,
-      default: false,
+      enum: ["pending", "approved", "cancelled", "completed"],
     },
     bid: [
       {
-        shgId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Shg",
-        },
-        shgname: {
-          type: String,
-          required: true,
-        },
-        shgcontact: {
-          type: String,
-          required: true,
-        },
-        shglocation: {
-          type: String,
-          required: true,
-        },
-        shgproduct: {
-          type: String,
-          required: true,
-        },
-        quantity: {
-          type: Number,
-          required: true,
-        },
-        manufacturingdate: {
-          type: Date,
-        },
-        expirydate: {
-          type: Date,
-        },
-        unit: {
-          type: String,
-        },
-        approved: {
-          type: Boolean,
-          default: false,
-        },
+        type: new mongoose.Schema(
+          {
+            shgId: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: "Shg",
+            },
+            shgname: {
+              type: String,
+              required: true,
+            },
+            shgcontact: {
+              type: String,
+              required: true,
+            },
+            shglocation: {
+              type: String,
+              required: true,
+            },
+            products: [
+              {
+                shgproduct: {
+                  type: String,
+                  required: true,
+                },
+                quantity: {
+                  type: Number,
+                  required: true,
+                },
+                unit: {
+                  type: String,
+                },
+                manufacturingdate: {
+                  type: Date,
+                },
+                expirydate: {
+                  type: Date,
+                },
+              },
+            ],
+            manufacturingdate: {
+              type: Date,
+            },
+            expirydate: {
+              type: Date,
+            },
+            unit: {
+              type: String,
+            },
+            status: {
+              type: String,
+              enum: ["pending", "approved", "cancelled", "completed"],
+            },
+          },
+          { timestamps: true }
+        ),
       },
     ],
   },

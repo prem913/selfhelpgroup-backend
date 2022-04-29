@@ -64,6 +64,7 @@ const logindepartment = asynchandler(async (req, res) => {
       message: "Login successful",
       token: token,
       usertype: "institute",
+      department: institute.department,
     });
   }
   const isMatch = await bcrypt.compare(password, department.password);
@@ -85,6 +86,7 @@ const logindepartment = asynchandler(async (req, res) => {
     message: "Login successful",
     token: token,
     usertype: department.usertype,
+    department: department.department,
   });
 });
 
@@ -120,32 +122,45 @@ const approveorder = asynchandler(async (req, res) => {
       error: "You are not authorized to approve this order",
     });
   }
-  if (order.status === "approved") {
-    return res.status(400).json({
-      error: "Order already approved",
-    });
-  }
+
   const shgfind = order.bid.find((order) => order.shgId.toString() === shgId);
   if (!shgfind) {
     return res.status(400).json({
       error: "No shg found with this id",
     });
   }
-  shgfind.approved = true;
-  const shgdata = await shg.findById(shgId);
-  const shgproduct = shgdata.products.find(
-    (product) => product.name == order.itemname
-  );
-  if (shgproduct.orderstatus === "approved") {
+  if (shgfind.status === "approved") {
     return res.status(400).json({
-      error: "SHG product already approved",
+      error: "Order already approved",
     });
   }
-  shgproduct.orderstatus = "approved";
-  shgproduct.department = req.user.department;
-  shgproduct.institutename = order.institutename;
-  shgproduct.institutelocation = order.institutelocation;
-  order.status = "approved";
+  shgfind.status = "approved";
+  const shgdata = await shg.findByIdAndUpdate(shgId, {
+    $push: {
+      orders: {
+        orderid: orderid,
+        status: "pending",
+        department: req.user.department,
+        institutename: order.institutename,
+        institutelocation: order.institutelocation,
+        products: shgfind.products,
+      },
+    },
+  });
+  // shgfind.products.forEach((individualproduct) => {
+  //   const shgproduct = shgdata.products.find(
+  //     (product) => product.name == individualproduct.shgproduct
+  //   );
+  //   if (shgproduct.orderstatus === "approved") {
+  //     return res.status(400).json({
+  //       error: "SHG product already approved",
+  //     });
+  //   }
+  //   shgproduct.orderstatus = "approved";
+  //   shgproduct.department = req.user.department;
+  //   shgproduct.institutename = order.institutename;
+  //   shgproduct.institutelocation = order.institutelocation;
+  // });
   await order.save();
   await shgdata.save();
   res.json({
@@ -167,10 +182,10 @@ const getshgdata = asynchandler(async (req, res) => {
 });
 
 const approvefordisplay = asynchandler(async (req, res) => {
-  const { orderid, shgId } = req.body;
-  if (!orderid) {
+  const { orderid, status } = req.body;
+  if (!orderid || !status) {
     return res.status(400).json({
-      error: "Please provide orderid",
+      error: "Please provide orderid and status",
     });
   }
   const order = await Order.findById(orderid);
@@ -184,12 +199,16 @@ const approvefordisplay = asynchandler(async (req, res) => {
       error: "You are not authorized to approve this order",
     });
   }
-  if (order.approvefordisplay === true) {
+  if (order.status === "approved") {
     return res.status(400).json({
       error: "Order already approved",
     });
   }
-  order.approvedfordisplay = true;
+  if (status === "approve") {
+    order.status = "approved";
+  } else if (status === "cancel") {
+    order.status = "cancelled";
+  }
   await order.save();
   res.json({
     message: "Order approved for display",
