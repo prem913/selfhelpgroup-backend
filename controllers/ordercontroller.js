@@ -93,6 +93,9 @@ const getorderbydepartment = asyncHandler(async (req, res) => {
   orders.sort((a, b) => {
     return new Date(b.createdAt) - new Date(a.createdAt);
   });
+  orders.forEach(order =>{
+    if(order.bid.length) order.bid.sort((a,b)=>b.products.length-a.products.length);
+  })
   res.json({
     message: "Orders fetched successfully",
     orders: orders,
