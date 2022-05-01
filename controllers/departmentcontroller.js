@@ -123,7 +123,9 @@ const approveorder = asynchandler(async (req, res) => {
     });
   }
 
-  const shgfind = order.bid.find((order) => order.shgId.toString() === shgId);
+  const shgfind = order.bid.find(
+    (order) => order.shgId.toString() === shgId.toString()
+  );
   if (!shgfind) {
     return res.status(400).json({
       error: "No shg found with this id",
@@ -131,9 +133,29 @@ const approveorder = asynchandler(async (req, res) => {
   }
   if (shgfind.status === "approved") {
     return res.status(400).json({
-      error: "Order already approved",
+      error: "Bid already approved",
     });
   }
+  order.items.forEach((item) => {
+    shgfind.products.forEach((product) => {
+      if (item.itemname === product.shgproduct) {
+        item.approvedquantity = item.approvedquantity + product.quantity;
+      }
+    });
+  });
+  await Order.findByIdAndUpdate(orderid, {
+    $push: {
+      approvedbid: {
+        shgId: shgId,
+        shgname: shgfind.shgname,
+        shgcontact: shgfind.shgcontact,
+        shglocation: shgfind.shglocation,
+        status: "pending",
+        products: shgfind.products,
+      },
+    },
+  });
+
   shgfind.status = "approved";
   const shgdata = await shg.findByIdAndUpdate(shgId, {
     $push: {
@@ -147,20 +169,6 @@ const approveorder = asynchandler(async (req, res) => {
       },
     },
   });
-  // shgfind.products.forEach((individualproduct) => {
-  //   const shgproduct = shgdata.products.find(
-  //     (product) => product.name == individualproduct.shgproduct
-  //   );
-  //   if (shgproduct.orderstatus === "approved") {
-  //     return res.status(400).json({
-  //       error: "SHG product already approved",
-  //     });
-  //   }
-  //   shgproduct.orderstatus = "approved";
-  //   shgproduct.department = req.user.department;
-  //   shgproduct.institutename = order.institutename;
-  //   shgproduct.institutelocation = order.institutelocation;
-  // });
   await order.save();
   await shgdata.save();
   res.json({

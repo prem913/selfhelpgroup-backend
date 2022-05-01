@@ -141,13 +141,14 @@ const bid = asynchandler(async (req, res) => {
       error: "order not found",
     });
   }
-  order.bid.forEach((bid) => {
-    if (bid.shgId.toString() === shgdata._id.toString()) {
-      return res.status(400).json({
-        error: "you have already bid for this order",
-      });
-    }
+  const biddata = order.bid.find((bid) => {
+    return bid.shgId.toString() === req.user._id.toString();
   });
+  if (biddata) {
+    return res.status(400).json({
+      error: "you have already bid for this order",
+    });
+  }
   product.forEach((item) => {
     if (!item.productid || !item.quantity) {
       return res.status(400).json({
@@ -210,8 +211,6 @@ const bid = asynchandler(async (req, res) => {
     if (product.expirydate) {
       productsdata[productsdata.length - 1].expirydate = product.expirydate;
     }
-    product.bidorderid = orderid;
-    product.orderstatus = "pending";
   });
   // if (quantity > product.quantity) {
   //   return res.status(400).json({
@@ -299,20 +298,6 @@ const deleteproduct = asynchandler(async (req, res) => {
     return res.status(400).json({
       error: "product not found",
     });
-  }
-  if (product.orderstatus === "approved") {
-    return res.status(400).json({
-      error:
-        "This Product is approved by department it can be deleted was order is completed",
-    });
-  }
-  if (product.bidorderid) {
-    const order = await Order.findById(product.bidorderid);
-    const bid = order.bid.find(
-      (bid) => toString(bid.shgId) === toString(shgdata._id)
-    );
-    order.bid.splice(order.bid.indexOf(bid), 1);
-    await order.save();
   }
   shgdata.products = shgdata.products.filter(
     (product) => product._id.toString() !== productid

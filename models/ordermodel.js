@@ -44,6 +44,11 @@ const ordermodel = mongoose.Schema(
           type: Number,
           required: true,
         },
+        approvedquantity: {
+          type: Number,
+          required: true,
+          default: 0,
+        },
         itemunit: {
           type: String,
           enum: ["kg", "dozen"],
@@ -116,6 +121,33 @@ const ordermodel = mongoose.Schema(
             status: {
               type: String,
               enum: ["pending", "approved", "cancelled", "completed"],
+            },
+          },
+          { timestamps: true }
+        ),
+      },
+    ],
+    approvedbid: [
+      {
+        type: new mongoose.Schema(
+          {
+            shgId: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: "Shg",
+            },
+            shgname: {
+              type: String,
+            },
+            shgcontact: {
+              type: String,
+            },
+            shglocation: {
+              type: String,
+            },
+            products: [],
+            status: {
+              type: String,
+              enum: ["pending", "completed"],
             },
           },
           { timestamps: true }

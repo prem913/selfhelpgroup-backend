@@ -62,7 +62,6 @@ const getallorders = asyncHandler(async (req, res) => {
   orders.sort((a, b) => {
     return new Date(b.createdAt) - new Date(a.createdAt);
   });
-
   const orderdata = [];
   // orders.filter((order) => {
   //   req.user.products.forEach((product) => {
@@ -72,16 +71,28 @@ const getallorders = asyncHandler(async (req, res) => {
   //     }
   //   });
   // });
-  req.user.products.forEach((product) => {
-    orders.forEach((order) => {
-      order.items.forEach((item) => {
-        if (item.itemname === product.name) {
-          orderdata.push(order);
-          return;
-        }
+  orders.forEach((order) => {
+    const item = order.items.find((item) => {
+      const product = req.user.products.find((product) => {
+        return product.name === item.itemname;
       });
+      return product;
     });
+    if (item) {
+      orderdata.push(order);
+    }
   });
+
+  // req.user.products.forEach((product) => {
+  //   orders.forEach((order) => {
+  //     order.items.forEach((item) => {
+  //       if (item.itemname === product.name) {
+  //         orderdata.push(order);
+  //         return;
+  //       }
+  //     });
+  //   });
+  // });
   res.json({
     message: "Orders fetched successfully",
     orders: orderdata,
@@ -93,9 +104,10 @@ const getorderbydepartment = asyncHandler(async (req, res) => {
   orders.sort((a, b) => {
     return new Date(b.createdAt) - new Date(a.createdAt);
   });
-  orders.forEach(order =>{
-    if(order.bid.length) order.bid.sort((a,b)=>b.products.length-a.products.length);
-  })
+  orders.forEach((order) => {
+    if (order.bid.length)
+      order.bid.sort((a, b) => b.products.length - a.products.length);
+  });
   res.json({
     message: "Orders fetched successfully",
     orders: orders,
