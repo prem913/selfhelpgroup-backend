@@ -24,84 +24,134 @@ const ordermodel = mongoose.Schema(
       type: String,
       required: true,
     },
-    items:[
-    {
-    itemtype: {
-      type: String,
-      required: true,
-      enum: ["packed", "loose"],
-    },
-    itemname: {
-      type: String,
-      required: true,
-    },
-    itemquantity: {
-      type: Number,
-      required: true,
-    },
-    itemunit: {
-      type: String,
-      enum: ["kg", "dozen"],
-    },
-    itemprice: {
-      type: Number,
-      required: true,
-    },
-    itemdescription: {
-      type: String,
-      required: true,
-    },
-  }
-],
-    status: {
-      type: String,
-      required: true,
-      enum: ["pending", "approved", "cancelled"],
-    },
-    approvedfordisplay: {
-      type: Boolean,
-      required: true,
-      default: false,
-    },
-    bid: [
+    items: [
       {
-        shgId: {
+        itemid: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "Shg",
+          ref: "Items",
+          required: true,
         },
-        shgname: {
+        itemtype: {
+          type: String,
+          required: true,
+          enum: ["packed", "loose"],
+        },
+        itemname: {
           type: String,
           required: true,
         },
-        shgcontact: {
-          type: String,
-          required: true,
-        },
-        shglocation: {
-          type: String,
-          required: true,
-        },
-        shgproduct: {
-          type: String,
-          required: true,
-        },
-        quantity: {
+        itemquantity: {
           type: Number,
           required: true,
         },
-        manufacturingdate: {
-          type: Date,
+        approvedquantity: {
+          type: Number,
+          required: true,
+          default: 0,
         },
-        expirydate: {
-          type: Date,
-        },
-        unit: {
+        itemunit: {
           type: String,
+          enum: ["kg", "dozen"],
         },
-        approved: {
-          type: Boolean,
-          default: false,
+        itemprice: {
+          type: Number,
+          required: true,
         },
+        itemdescription: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+    status: {
+      type: String,
+      required: true,
+      enum: ["pending", "approved", "cancelled", "completed"],
+    },
+    bid: [
+      {
+        type: new mongoose.Schema(
+          {
+            shgId: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: "Shg",
+            },
+            shgname: {
+              type: String,
+              required: true,
+            },
+            shgcontact: {
+              type: String,
+              required: true,
+            },
+            shglocation: {
+              type: String,
+              required: true,
+            },
+            products: [
+              {
+                shgproduct: {
+                  type: String,
+                  required: true,
+                },
+                quantity: {
+                  type: Number,
+                  required: true,
+                },
+                unit: {
+                  type: String,
+                },
+                manufacturingdate: {
+                  type: Date,
+                },
+                expirydate: {
+                  type: Date,
+                },
+              },
+            ],
+            manufacturingdate: {
+              type: Date,
+            },
+            expirydate: {
+              type: Date,
+            },
+            unit: {
+              type: String,
+            },
+            status: {
+              type: String,
+              enum: ["pending", "approved", "cancelled", "completed"],
+            },
+          },
+          { timestamps: true }
+        ),
+      },
+    ],
+    approvedbid: [
+      {
+        type: new mongoose.Schema(
+          {
+            shgId: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: "Shg",
+            },
+            shgname: {
+              type: String,
+            },
+            shgcontact: {
+              type: String,
+            },
+            shglocation: {
+              type: String,
+            },
+            products: [],
+            status: {
+              type: String,
+              enum: ["pending", "completed"],
+            },
+          },
+          { timestamps: true }
+        ),
       },
     ],
   },

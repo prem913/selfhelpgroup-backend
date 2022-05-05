@@ -128,70 +128,103 @@ const addproducts = asynchandler(async (req, res) => {
 });
 
 const bid = asynchandler(async (req, res) => {
-  const { orderid, quantity } = req.body;
-  if (!orderid || !quantity) {
+  const { orderid, product } = req.body;
+  if (!orderid || !product) {
     return res.status(400).json({
-      error: "Please provide orderid and quantity",
+      error: "Please provide product and orderid",
     });
   }
   const order = await Order.findById(orderid);
+  const shgdata = await shg.findById(req.user._id);
   if (!order) {
     return res.status(400).json({
       error: "order not found",
     });
   }
-  const shgdata = await shg.findById(req.user._id);
-  const product = shgdata.products.find(
-    (product) => product.name === order.itemname
-  );
-  const checkorder = order.bid.find(
-    (bid) => toString(bid.shgId) === toString(shgdata._id)
-  );
-  if (checkorder) {
+  const biddata = order.bid.find((bid) => {
+    return bid.shgId.toString() === req.user._id.toString();
+  });
+  if (biddata) {
     return res.status(400).json({
-      error: "you have already added product for this order",
+      error: "you have already bid for this order",
     });
   }
-  if (!product) {
-    return res.status(400).json({
-      error: "Please add product first",
+  product.forEach((item) => {
+    if (!item.productid || !item.quantity) {
+      return res.status(400).json({
+        error: "Please provide product name and quantity",
+      });
+    }
+    const orderproduct = order.items.find(
+      (product) => product._id.toString() === item.productid
+    );
+    if (!orderproduct) {
+      return res.status(400).json({
+        error: "order product not found",
+      });
+    }
+  });
+  const productsdata = [];
+  product.forEach(async (item) => {
+    const orderproduct = order.items.find(
+      (product) => product._id.toString() === item.productid
+    );
+    const product = shgdata.products.find(
+      (product) => product.name === orderproduct.itemname
+    );
+    if (!product) {
+      return res.status(400).json({
+        error: "Please add product first",
+      });
+    }
+    if (product.type !== orderproduct.itemtype) {
+      return res.status(400).json({
+        error: "product type does not match with order type",
+      });
+    }
+    if (product.type === "loose" && product.unit !== orderproduct.itemunit) {
+      return res.status(400).json({
+        error: "product unit does not match with order unit",
+      });
+    }
+    const checkorder = order.bid.find(
+      (bid) =>
+        toString(bid.shgId) === toString(shgdata._id) &&
+        bid.shgproduct === product.name
+    );
+    if (checkorder) {
+      return res.status(400).json({
+        error: "you have already added product for this order",
+      });
+    }
+    productsdata.push({
+      shgproduct: product.name,
+      quantity: item.quantity,
     });
-  }
-  if (product.type !== order.itemtype) {
-    return res.status(400).json({
-      error: "product type does not match with order type",
-    });
-  }
-  if (product.type === "loose" && product.unit !== order.itemunit) {
-    return res.status(400).json({
-      error: "product unit does not match with order unit",
-    });
-  }
-  if (quantity > product.quantity) {
-    return res.status(400).json({
-      error: "You do not have this quantity in your inventory",
-    });
-  }
+    if (product.unit) {
+      productsdata[productsdata.length - 1].unit = product.unit;
+    }
+    if (product.manufacturingdate) {
+      productsdata[productsdata.length - 1].manufacturingdate =
+        product.manufacturingdate;
+    }
+    if (product.expirydate) {
+      productsdata[productsdata.length - 1].expirydate = product.expirydate;
+    }
+  });
+  // if (quantity > product.quantity) {
+  //   return res.status(400).json({
+  //     error: "You do not have this quantity in your inventory",
+  //   });
+  // }
   order.bid.push({
     shgId: shgdata._id,
     shgname: shgdata.name,
     shgcontact: shgdata.contact,
     shglocation: shgdata.location,
-    shgproduct: product.name,
-    quantity: quantity,
+    products: productsdata,
+    status: "pending",
   });
-  if (product.unit) {
-    order.bid[order.bid.length - 1].unit = product.unit;
-  }
-  if (product.manufacturingdate) {
-    order.bid[order.bid.length - 1].manufacturingdate =
-      product.manufacturingdate;
-  }
-  if (product.expirydate) {
-    order.bid[order.bid.length - 1].expirydate = product.expirydate;
-  }
-  product.bidorderid = orderid;
-  product.orderstatus = "pending";
   await shgdata.save();
   await order.save();
   res.status(200).json({
@@ -266,20 +299,6 @@ const deleteproduct = asynchandler(async (req, res) => {
       error: "product not found",
     });
   }
-  if (product.orderstatus === "approved") {
-    return res.status(400).json({
-      error:
-        "This Product is approved by department it can be deleted was order is completed",
-    });
-  }
-  if (product.bidorderid) {
-    const order = await Order.findById(product.bidorderid);
-    const bid = order.bid.find(
-      (bid) => toString(bid.shgId) === toString(shgdata._id)
-    );
-    order.bid.splice(order.bid.indexOf(bid), 1);
-    await order.save();
-  }
   shgdata.products = shgdata.products.filter(
     (product) => product._id.toString() !== productid
   );
@@ -291,15 +310,19 @@ const deleteproduct = asynchandler(async (req, res) => {
 
 const getapprovedproducts = asynchandler(async (req, res) => {
   const shgdata = await shg.findById(req.user._id);
-  const products = shgdata.products.filter(
-    (product) => product.orderstatus === "approved"
-  );
-
   res.status(200).json({
-    products: products,
+    products: shgdata.orders,
   });
 });
 
+const getprofile = asynchandler(async (req, res) => {
+  const shgdata = await shg.findById(req.user._id);
+  res.status(200).json({
+    name: shgdata.name,
+    contact: shgdata.contact,
+    location: shgdata.location,
+  });
+});
 module.exports = {
   registershg,
   shglogin,
@@ -310,4 +333,5 @@ module.exports = {
   updateproduct,
   deleteproduct,
   getapprovedproducts,
+  getprofile,
 };

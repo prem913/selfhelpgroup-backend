@@ -39,21 +39,27 @@ const shgSchema = new mongoose.Schema(
         expirydate: {
           type: Date,
         },
-        bidorderid: {
+      },
+    ],
+    orders: [
+      {
+        orderid: {
           type: mongoose.Schema.Types.ObjectId,
-        },
-        orderstatus: {
-          type: String,
-          enum: ["pending", "approved"],
-        },
-        department: {
-          type: String,
+          ref: "Order",
         },
         institutename: {
           type: String,
         },
         institutelocation: {
           type: String,
+        },
+        department: {
+          type: String,
+        },
+        products: [],
+        status: {
+          type: String,
+          enum: ["pending", "completed"],
         },
       },
     ],
