@@ -78,7 +78,7 @@ const getallorders = asyncHandler(async (req, res) => {
       });
       return product;
     });
-    if (item) {
+    if (item && order.institutelocation === req.user.location) {
       orderdata.push(order);
     }
   });
@@ -159,7 +159,12 @@ const getallitems = asyncHandler(async (req, res) => {
 
 const additems = asyncHandler(async (req, res) => {
   const { itemtype, itemdescription, itemunit, itemname, itemprice } = req.body;
-
+  const itemcheck = await itemsmodel.findOne({ itemname });
+  if (itemcheck) {
+    return res.status(400).json({
+      error: "Item already exists",
+    });
+  }
   if (!itemname || !itemdescription || !itemtype || !itemprice) {
     res.status(400).json({
       message: "provide all details",

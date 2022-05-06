@@ -149,87 +149,102 @@ const bid = asynchandler(async (req, res) => {
       error: "you have already bid for this order",
     });
   }
-  product.forEach((item) => {
-    if (!item.productid || !item.quantity) {
-      return res.status(400).json({
-        error: "Please provide product name and quantity",
+  const check = async () => {
+    return new Promise((resolve, reject) => {
+      product.forEach((item) => {
+        if (!item.productid || !item.quantity || !item.unitprice) {
+          reject("Please provide product name quantity and unitprice");
+        }
+        const orderproduct = order.items.find(
+          (product) => product._id.toString() === item.productid
+        );
+        if (!orderproduct) {
+          reject("order product not found");
+        }
+        const product = req.user.products.find(
+          (product) => product.name === orderproduct.itemname
+        );
+        if (!product) {
+          reject("Please add product first");
+        }
       });
-    }
-    const orderproduct = order.items.find(
-      (product) => product._id.toString() === item.productid
-    );
-    if (!orderproduct) {
-      return res.status(400).json({
-        error: "order product not found",
-      });
-    }
-  });
-  const productsdata = [];
-  product.forEach(async (item) => {
-    const orderproduct = order.items.find(
-      (product) => product._id.toString() === item.productid
-    );
-    const product = shgdata.products.find(
-      (product) => product.name === orderproduct.itemname
-    );
-    if (!product) {
-      return res.status(400).json({
-        error: "Please add product first",
-      });
-    }
-    if (product.type !== orderproduct.itemtype) {
-      return res.status(400).json({
-        error: "product type does not match with order type",
-      });
-    }
-    if (product.type === "loose" && product.unit !== orderproduct.itemunit) {
-      return res.status(400).json({
-        error: "product unit does not match with order unit",
-      });
-    }
-    const checkorder = order.bid.find(
-      (bid) =>
-        toString(bid.shgId) === toString(shgdata._id) &&
-        bid.shgproduct === product.name
-    );
-    if (checkorder) {
-      return res.status(400).json({
-        error: "you have already added product for this order",
-      });
-    }
-    productsdata.push({
-      shgproduct: product.name,
-      quantity: item.quantity,
+      resolve();
     });
-    if (product.unit) {
-      productsdata[productsdata.length - 1].unit = product.unit;
-    }
-    if (product.manufacturingdate) {
-      productsdata[productsdata.length - 1].manufacturingdate =
-        product.manufacturingdate;
-    }
-    if (product.expirydate) {
-      productsdata[productsdata.length - 1].expirydate = product.expirydate;
-    }
-  });
-  // if (quantity > product.quantity) {
-  //   return res.status(400).json({
-  //     error: "You do not have this quantity in your inventory",
-  //   });
-  // }
-  order.bid.push({
-    shgId: shgdata._id,
-    shgname: shgdata.name,
-    shgcontact: shgdata.contact,
-    shglocation: shgdata.location,
-    products: productsdata,
-    status: "pending",
-  });
-  await shgdata.save();
-  await order.save();
-  res.status(200).json({
-    message: "product added successfully to order",
-  });
+  };
+  check()
+    .then(async () => {
+      const productsdata = [];
+      product.forEach(async (item) => {
+        const orderproduct = order.items.find(
+          (product) => product._id.toString() === item.productid
+        );
+        const product = shgdata.products.find(
+          (product) => product.name === orderproduct.itemname
+        );
+        if (product.type !== orderproduct.itemtype) {
+          return res.status(400).json({
+            error: "product type does not match with order type",
+          });
+        }
+        if (
+          product.type === "loose" &&
+          product.unit !== orderproduct.itemunit
+        ) {
+          return res.status(400).json({
+            error: "product unit does not match with order unit",
+          });
+        }
+        const checkorder = order.bid.find(
+          (bid) =>
+            toString(bid.shgId) === toString(shgdata._id) &&
+            bid.shgproduct === product.name
+        );
+        if (checkorder) {
+          return res.status(400).json({
+            error: "you have already added product for this order",
+          });
+        }
+        productsdata.push({
+          shgproduct: product.name,
+          quantity: item.quantity,
+          unitprice: item.unitprice,
+          totalprice: item.quantity * item.unitprice,
+        });
+        if (product.unit) {
+          productsdata[productsdata.length - 1].unit = product.unit;
+        }
+        if (product.manufacturingdate) {
+          productsdata[productsdata.length - 1].manufacturingdate =
+            product.manufacturingdate;
+        }
+        if (product.expirydate) {
+          productsdata[productsdata.length - 1].expirydate = product.expirydate;
+        }
+      });
+      // if (quantity > product.quantity) {
+      //   return res.status(400).json({
+      //     error: "You do not have this quantity in your inventory",
+      //   });
+      // }
+      order.bid.push({
+        shgId: shgdata._id,
+        shgname: shgdata.name,
+        shgcontact: shgdata.contact,
+        shglocation: shgdata.location,
+        products: productsdata,
+        status: "pending",
+      });
+      await shgdata.save();
+      await order.save();
+      res.status(200).json({
+        message: "products added successfully to order",
+      });
+    })
+    .catch((err) => {
+      res.status(400).json({
+        error: err,
+      });
+    });
 });
 
 const getproducts = asynchandler(async (req, res) => {

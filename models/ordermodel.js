@@ -101,6 +101,14 @@ const ordermodel = mongoose.Schema(
                 unit: {
                   type: String,
                 },
+                unitprice: {
+                  type: Number,
+                  required: true,
+                },
+                totalprice: {
+                  type: Number,
+                  required: true,
+                },
                 manufacturingdate: {
                   type: Date,
                 },
