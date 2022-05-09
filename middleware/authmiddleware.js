@@ -130,9 +130,18 @@ const combinedprotector = asyncHandler(async (req, res, next) => {
   }
 });
 
+const protectceo = (req,res,next)=>{
+  if(req.user.usertype !=="ceo"){
+    res.status(400);
+    throw new Error("Not Authorized");
+  }
+  next();
+}
+
 module.exports = {
   protectdepartment,
   protectshg,
   protectinstitute,
   combinedprotector,
+  protectceo
 };
