@@ -171,6 +171,15 @@ const approveorder = asynchandler(async (req, res) => {
   });
   await order.save();
   await shgdata.save();
+  const shgfromshgmodel = await shg.findById(shgId);
+  if (shgfromshgmodel.devicetoken) {
+    sendnotification(
+      shgfromshgmodel.devicetoken,
+      order.institutename,
+      order.department,
+      order.status
+    );
+  }
   res.json({
     message: "Order approved successfully",
   });
@@ -219,15 +228,6 @@ const approvefordisplay = asynchandler(async (req, res) => {
   }
   sendEmail(order.email, order._id.toString(), order.status, order.department);
   await order.save();
-  const shgfromshgmodel = await shg.findById(order.shgId);
-  if (shgfromshgmodel.devicetoken) {
-    sendnotification(
-      shgfromshgmodel.devicetoken,
-      order.institutename,
-      order.department,
-      order.status
-    );
-  }
   res.json({
     message: "Order approved for display",
   });
