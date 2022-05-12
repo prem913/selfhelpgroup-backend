@@ -6,7 +6,7 @@ const shg = require("../models/shgmodel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { sendEmail } = require("../utils/mail");
-import { sendnotification } from "../utils/notification";
+const { sendnotification } = require("../utils/notification");
 const registerdepartment = asynchandler(async (req, res) => {
   const { department, contact, email, password } = req.body;
   if (!department || !contact || !email || !password) {
