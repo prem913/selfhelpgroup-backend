@@ -5,6 +5,7 @@ const Institute = require("../models/institutemodel");
 const shg = require("../models/shgmodel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { sendEmail } = require("../utils/mail");
 const registerdepartment = asynchandler(async (req, res) => {
   const { department, contact, email, password } = req.body;
   if (!department || !contact || !email || !password) {
@@ -150,7 +151,6 @@ const approveorder = asynchandler(async (req, res) => {
         shgname: shgfind.shgname,
         shgcontact: shgfind.shgcontact,
         shglocation: shgfind.shglocation,
-        status: "pending",
         products: shgfind.products,
       },
     },
@@ -161,7 +161,6 @@ const approveorder = asynchandler(async (req, res) => {
     $push: {
       orders: {
         orderid: orderid,
-        status: "pending",
         department: req.user.department,
         institutename: order.institutename,
         institutelocation: order.institutelocation,
@@ -217,6 +216,7 @@ const approvefordisplay = asynchandler(async (req, res) => {
   } else if (status === "cancel") {
     order.status = "cancelled";
   }
+  sendEmail(order.email, order._id.toString(), order.status, order.department);
   await order.save();
   res.json({
     message: "Order approved for display",

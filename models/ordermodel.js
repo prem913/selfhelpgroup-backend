@@ -153,9 +153,9 @@ const ordermodel = mongoose.Schema(
               type: String,
             },
             products: [],
-            status: {
-              type: String,
-              enum: ["pending", "completed"],
+            delivered: {
+              type: Boolean,
+              default: false,
             },
           },
           { timestamps: true }

@@ -59,9 +59,7 @@ const createorder = asyncHandler(async (req, res) => {
 
 const getallorders = asyncHandler(async (req, res) => {
   const orders = await Order.find({ status: "approved" });
-  orders.sort((a, b) => {
-    return new Date(b.createdAt) - new Date(a.createdAt);
-  });
+
   const orderdata = [];
   // orders.filter((order) => {
   //   req.user.products.forEach((product) => {
@@ -82,7 +80,9 @@ const getallorders = asyncHandler(async (req, res) => {
       orderdata.push(order);
     }
   });
-
+  orderdata.sort((a, b) => {
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
   // req.user.products.forEach((product) => {
   //   orders.forEach((order) => {
   //     order.items.forEach((item) => {

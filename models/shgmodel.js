@@ -57,13 +57,14 @@ const shgSchema = new mongoose.Schema(
           type: String,
         },
         products: [],
-        status: {
-          type: String,
-          enum: ["pending", "completed"],
+        delivered: {
+          type: Boolean,
+          default: false,
         },
       },
     ],
     otp: String,
+    devicetoken: String,
   },
   { timestamps: true }
 );

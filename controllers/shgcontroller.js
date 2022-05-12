@@ -47,7 +47,7 @@ const shglogin = asynchandler(async (req, res) => {
 });
 
 const verifyOtp = asynchandler(async (req, res) => {
-  const { shgId, otp } = req.body;
+  const { shgId, otp, devicetoken } = req.body;
   const shgdata = await shg.findById(shgId);
   if (!shgdata) {
     res.status(400).json({
@@ -70,7 +70,9 @@ const verifyOtp = asynchandler(async (req, res) => {
   //   });
   //   return;
   // }
-
+  if (devicetoken) {
+    shgdata.devicetoken = devicetoken;
+  }
   shgdata.otp = "";
   await shgdata.save();
   const token = createJwtToken({ shgId: shgdata._id }, { expiresIn: "30d" });
@@ -325,6 +327,10 @@ const deleteproduct = asynchandler(async (req, res) => {
 
 const getapprovedproducts = asynchandler(async (req, res) => {
   const shgdata = await shg.findById(req.user._id);
+  shgdata.orders.sort((a, b) => {
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
   res.status(200).json({
     products: shgdata.orders,
   });
