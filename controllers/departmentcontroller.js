@@ -6,6 +6,7 @@ const shg = require("../models/shgmodel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { sendEmail } = require("../utils/mail");
+import { sendnotification } from "../utils/notification";
 const registerdepartment = asynchandler(async (req, res) => {
   const { department, contact, email, password } = req.body;
   if (!department || !contact || !email || !password) {
@@ -218,6 +219,15 @@ const approvefordisplay = asynchandler(async (req, res) => {
   }
   sendEmail(order.email, order._id.toString(), order.status, order.department);
   await order.save();
+  const shgfromshgmodel = await shg.findById(order.shgId);
+  if (shgfromshgmodel.devicetoken) {
+    sendnotification(
+      shgfromshgmodel.devicetoken,
+      order.institutename,
+      order.department,
+      order.status
+    );
+  }
   res.json({
     message: "Order approved for display",
   });
