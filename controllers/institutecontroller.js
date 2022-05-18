@@ -3,6 +3,9 @@ const departmentmodel = require("../models/departmentmodel");
 const asyncHandler = require("express-async-handler");
 const { createJwtToken } = require("../utils/token");
 const bcrypt = require("bcryptjs");
+const Order = require("../models/ordermodel");
+const shg = require("../models/shgmodel");
+const { sendnotification } = require("../utils/notification");
 const registerinstitute = asyncHandler(async (req, res) => {
   const { name, location, contact, department, email, password } = req.body;
   if (!name || !location || !contact || !department || !email || !password) {
@@ -112,4 +115,84 @@ const registerinstitute = asyncHandler(async (req, res) => {
 //     token: jwt,
 //   });
 // });
-module.exports = { registerinstitute };
+
+const approveorder = asyncHandler(async (req, res) => {
+  const { orderid, shgId } = req.body;
+  if (!orderid || !shgId) {
+    return res.status(400).json({
+      error: "Please provide orderid and shgId",
+    });
+  }
+  const order = await Order.findById(orderid);
+  if (!order) {
+    return res.status(400).json({
+      error: "No order found with this id",
+    });
+  }
+  if (order.instituteid.toString() !== req.user._id.toString()) {
+    return res.status(400).json({
+      error: "You are not authorized to approve this order",
+    });
+  }
+
+  const shgfind = order.bid.find(
+    (order) => order.shgId.toString() === shgId.toString()
+  );
+  if (!shgfind) {
+    return res.status(400).json({
+      error: "No shg found with this id",
+    });
+  }
+  if (shgfind.status === "approved") {
+    return res.status(400).json({
+      error: "Bid already approved",
+    });
+  }
+  order.items.forEach((item) => {
+    shgfind.products.forEach((product) => {
+      if (item.itemname === product.shgproduct) {
+        item.approvedquantity = item.approvedquantity + product.quantity;
+      }
+    });
+  });
+  await Order.findByIdAndUpdate(orderid, {
+    $push: {
+      approvedbid: {
+        shgId: shgId,
+        shgname: shgfind.shgname,
+        shgcontact: shgfind.shgcontact,
+        shglocation: shgfind.shglocation,
+        products: shgfind.products,
+      },
+    },
+  });
+
+  shgfind.status = "approved";
+  const shgdata = await shg.findByIdAndUpdate(shgId, {
+    $push: {
+      orders: {
+        orderid: orderid,
+        department: req.user.department,
+        institutename: order.institutename,
+        institutelocation: order.institutelocation,
+        products: shgfind.products,
+      },
+    },
+  });
+  await order.save();
+  await shgdata.save();
+  const shgfromshgmodel = await shg.findById(shgId);
+  if (shgfromshgmodel.devicetoken) {
+    sendnotification(
+      shgfromshgmodel.devicetoken,
+      order.institutename,
+      order.department,
+      order.status
+    );
+  }
+  res.json({
+    message: "Order approved successfully",
+  });
+});
+
+module.exports = { registerinstitute, approveorder };

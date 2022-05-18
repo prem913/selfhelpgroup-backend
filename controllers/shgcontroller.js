@@ -153,7 +153,7 @@ const bid = asynchandler(async (req, res) => {
   }
   const check = async () => {
     return new Promise((resolve, reject) => {
-      product.forEach((item) => {
+      product.forEach((item, index) => {
         if (!item.productid || !item.quantity || !item.unitprice) {
           reject("Please provide product name quantity and unitprice");
         }
@@ -169,8 +169,10 @@ const bid = asynchandler(async (req, res) => {
         if (!product) {
           reject("Please add product first");
         }
+        if (index === product.length - 1) {
+          resolve();
+        }
       });
-      resolve();
     });
   };
   check()
@@ -330,7 +332,6 @@ const getapprovedproducts = asynchandler(async (req, res) => {
   shgdata.orders.sort((a, b) => {
     return new Date(b.createdAt) - new Date(a.createdAt);
   });
-
   res.status(200).json({
     products: shgdata.orders,
   });

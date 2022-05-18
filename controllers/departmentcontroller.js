@@ -5,8 +5,6 @@ const Institute = require("../models/institutemodel");
 const shg = require("../models/shgmodel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { sendEmail } = require("../utils/mail");
-const { sendnotification } = require("../utils/notification");
 const registerdepartment = asynchandler(async (req, res) => {
   const { department, contact, email, password } = req.body;
   if (!department || !contact || !email || !password) {
@@ -106,85 +104,6 @@ const instituteunderdepartment = asynchandler(async (req, res) => {
   });
 });
 
-const approveorder = asynchandler(async (req, res) => {
-  const { orderid, shgId } = req.body;
-  if (!orderid || !shgId) {
-    return res.status(400).json({
-      error: "Please provide orderid and shgId",
-    });
-  }
-  const order = await Order.findById(orderid);
-  if (!order) {
-    return res.status(400).json({
-      error: "No order found with this id",
-    });
-  }
-  if (order.department !== req.user.department) {
-    return res.status(400).json({
-      error: "You are not authorized to approve this order",
-    });
-  }
-
-  const shgfind = order.bid.find(
-    (order) => order.shgId.toString() === shgId.toString()
-  );
-  if (!shgfind) {
-    return res.status(400).json({
-      error: "No shg found with this id",
-    });
-  }
-  if (shgfind.status === "approved") {
-    return res.status(400).json({
-      error: "Bid already approved",
-    });
-  }
-  order.items.forEach((item) => {
-    shgfind.products.forEach((product) => {
-      if (item.itemname === product.shgproduct) {
-        item.approvedquantity = item.approvedquantity + product.quantity;
-      }
-    });
-  });
-  await Order.findByIdAndUpdate(orderid, {
-    $push: {
-      approvedbid: {
-        shgId: shgId,
-        shgname: shgfind.shgname,
-        shgcontact: shgfind.shgcontact,
-        shglocation: shgfind.shglocation,
-        products: shgfind.products,
-      },
-    },
-  });
-
-  shgfind.status = "approved";
-  const shgdata = await shg.findByIdAndUpdate(shgId, {
-    $push: {
-      orders: {
-        orderid: orderid,
-        department: req.user.department,
-        institutename: order.institutename,
-        institutelocation: order.institutelocation,
-        products: shgfind.products,
-      },
-    },
-  });
-  await order.save();
-  await shgdata.save();
-  const shgfromshgmodel = await shg.findById(shgId);
-  if (shgfromshgmodel.devicetoken) {
-    sendnotification(
-      shgfromshgmodel.devicetoken,
-      order.institutename,
-      order.department,
-      order.status
-    );
-  }
-  res.json({
-    message: "Order approved successfully",
-  });
-});
-
 const getshgdata = asynchandler(async (req, res) => {
   if (req.user.department !== "ceo") {
     return res.status(400).json({
@@ -195,41 +114,6 @@ const getshgdata = asynchandler(async (req, res) => {
   res.json({
     message: "SHG data",
     data: shgdata,
-  });
-});
-
-const approvefordisplay = asynchandler(async (req, res) => {
-  const { orderid, status } = req.body;
-  if (!orderid || !status) {
-    return res.status(400).json({
-      error: "Please provide orderid and status",
-    });
-  }
-  const order = await Order.findById(orderid);
-  if (!order) {
-    return res.status(400).json({
-      error: "No order found with this id",
-    });
-  }
-  if (order.department !== req.user.department) {
-    return res.status(400).json({
-      error: "You are not authorized to approve this order",
-    });
-  }
-  if (order.status === "approved") {
-    return res.status(400).json({
-      error: "Order already approved",
-    });
-  }
-  if (status === "approve") {
-    order.status = "approved";
-  } else if (status === "cancel") {
-    order.status = "cancelled";
-  }
-  sendEmail(order.email, order._id.toString(), order.status, order.department);
-  await order.save();
-  res.json({
-    message: "Order approved for display",
   });
 });
 
@@ -263,8 +147,6 @@ module.exports = {
   registerdepartment,
   logindepartment,
   instituteunderdepartment,
-  approveorder,
   getshgdata,
-  approvefordisplay,
   profile,
 };

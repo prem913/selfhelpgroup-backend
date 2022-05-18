@@ -43,24 +43,29 @@ const shgSchema = new mongoose.Schema(
     ],
     orders: [
       {
-        orderid: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Order",
-        },
-        institutename: {
-          type: String,
-        },
-        institutelocation: {
-          type: String,
-        },
-        department: {
-          type: String,
-        },
-        products: [],
-        delivered: {
-          type: Boolean,
-          default: false,
-        },
+        type: new mongoose.Schema(
+          {
+            orderid: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: "Order",
+            },
+            institutename: {
+              type: String,
+            },
+            institutelocation: {
+              type: String,
+            },
+            department: {
+              type: String,
+            },
+            products: [],
+            delivered: {
+              type: Boolean,
+              default: false,
+            },
+          },
+          { timestamps: true }
+        ),
       },
     ],
     otp: String,
