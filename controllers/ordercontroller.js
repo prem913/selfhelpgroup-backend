@@ -12,51 +12,70 @@ const createorder = asyncHandler(async (req, res) => {
         error: "Please provide items to update",
       });
     }
-    items.forEach((item) => {
-      if (!item.itemid && !item.itemquantity) {
-        return res.status(400).json({
-          error: "Please provide all the details itemid and quantity",
-        });
-      }
-      // if (itemtype === "loose" && !itemunit) {
-      //   return res.status(400).json({
-      //     error: "Please provide unit with quantity",
-      //   });
-      // }
-    });
-    orderdata.institutename = req.user.name;
-    orderdata.instituteid = req.user._id;
-    orderdata.departmentid = req.user.departmentid;
-    orderdata.department = req.user.department;
-    orderdata.institutelocation = req.user.location;
-    orderdata.status = "pending";
-    await orderdata.save();
-    // orderdata.items = itemdata;
-    await items.forEach(async ({ itemid, itemquantity }) => {
-      const item = await itemsmodel.findById(itemid);
-      if (!item) {
-        return res.status(400).json({
-          error: "Item not found",
-        });
-      }
-      await Order.findByIdAndUpdate(orderdata._id, {
-        $push: {
-          items: {
-            itemid: itemid,
-            itemname: item.itemname,
-            itemtype: item.itemtype,
-            itemdescription: item.itemdescription,
-            itemprice: item.itemprice,
-            itemunit: item.itemunit,
-            itemquantity: itemquantity,
-          },
-        },
-      });
-    });
+    const check = async () => {
+      return new Promise((resolve, reject) => {
+        items.forEach(async (item, index) => {
+          if (!item.itemid || !item.itemquantity) {
+            reject("Please provide all the details itemid and quantity");
+          }
+          const itemdata = await itemsmodel.findById(item.itemid);
+          if (!itemdata) {
+            reject("Item not found");
+          }
+          // if (itemtype === "loose" && !itemunit) {
+          //   return res.status(400).json({
+          //     error: "Please provide unit with quantity",
+          //   });
+          // }
+          req.user.savedorders.forEach((savedorder, index) => {
+            if (savedorder.itemid.toString() === item.itemid.toString()) {
+              req.user.savedorders.splice(index, 1);
+            }
+          });
 
-    res.json({
-      message: "Order registered successfully",
-    });
+          if (index === items.length - 1) {
+            resolve();
+          }
+        });
+      });
+    };
+    check()
+      .then(async () => {
+        orderdata.institutename = req.user.name;
+        orderdata.instituteid = req.user._id;
+        orderdata.departmentid = req.user.departmentid;
+        orderdata.department = req.user.department;
+        orderdata.institutelocation = req.user.location;
+        orderdata.status = "pending";
+        await orderdata.save();
+
+        // orderdata.items = itemdata;
+        await items.forEach(async ({ itemid, itemquantity }) => {
+          const item = await itemsmodel.findById(itemid);
+          await Order.findByIdAndUpdate(orderdata._id, {
+            $push: {
+              items: {
+                itemid: itemid,
+                itemname: item.itemname,
+                itemtype: item.itemtype,
+                itemdescription: item.itemdescription,
+                itemprice: item.itemprice,
+                itemunit: item.itemunit,
+                itemquantity: itemquantity,
+              },
+            },
+          });
+        });
+        await req.user.save();
+        res.json({
+          message: "Order registered successfully",
+        });
+      })
+      .catch((err) => {
+        return res.status(400).json({
+          error: err,
+        });
+      });
   } catch (err) {
     res.status(500).json({
       error: err.message,

@@ -37,6 +37,25 @@ const institutemodel = mongoose.Schema(
       type: String,
       required: true,
     },
+    savedorders: [
+      {
+        type: new mongoose.Schema(
+          {
+            itemid: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: "Item",
+            },
+            itemname: {
+              type: String,
+            },
+            itemquantity: {
+              type: Number,
+            },
+          },
+          { _id: false }
+        ),
+      },
+    ],
   },
   { timestamps: true }
 );

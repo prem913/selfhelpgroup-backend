@@ -6,6 +6,7 @@ const bcrypt = require("bcryptjs");
 const Order = require("../models/ordermodel");
 const shg = require("../models/shgmodel");
 const { sendnotification } = require("../utils/notification");
+const itemsmodel = require("../models/itemsmodel");
 const registerinstitute = asyncHandler(async (req, res) => {
   const { name, location, contact, department, email, password } = req.body;
   if (!name || !location || !contact || !department || !email || !password) {
@@ -195,4 +196,62 @@ const approveorder = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { registerinstitute, approveorder };
+const saveorder = asyncHandler(async (req, res) => {
+  const items = req.body;
+  if (Object.keys(items).length === 0) {
+    return res.status(400).json({
+      error: "Please provide items to save",
+    });
+  }
+  const check = async () => {
+    return new Promise((resolve, reject) => {
+      items.forEach(async (item, index) => {
+        if (!item.itemid || !item.itemquantity) {
+          reject("Please provide all the details itemid and quantity");
+        }
+        const itemdata = await itemsmodel.findById(item.itemid);
+        item.itemname = itemdata.itemname;
+        if (!itemdata) {
+          reject("Item not found");
+        }
+        if (index === items.length - 1) {
+          resolve();
+        }
+      });
+    });
+  };
+  check()
+    .then(async () => {
+      items.forEach(async (item) => {
+        req.user.savedorders.push({
+          itemid: item.itemid,
+          itemname: item.itemname,
+          itemquantity: item.itemquantity,
+        });
+      });
+      await req.user.save();
+      res.status(200).json({
+        message: "Items saved successfully",
+      });
+    })
+    .catch((err) => {
+      return res.status(400).json({
+        error: err,
+      });
+    });
+});
+
+const getsavedorder = asyncHandler(async (req, res) => {
+  const savedorders = req.user.savedorders;
+  if (savedorders.length === 0) {
+    return res.status(400).json({
+      error: "No saved orders found",
+    });
+  }
+  return res.status(200).json({
+    message: "Saved orders found",
+    savedorders: savedorders,
+  });
+});
+
+module.exports = { registerinstitute, approveorder, saveorder, getsavedorder };
