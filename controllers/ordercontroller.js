@@ -353,6 +353,48 @@ const lockorder = asyncHandler(async (req, res) => {
   });
 });
 
+const deleteitem = asyncHandler(async (req, res) => {
+  const { orderid, itemid } = req.body;
+  if (!itemid || !orderid) {
+    return res.status(400).json({
+      error: "Please provide itemid and orderid",
+    });
+  }
+  const order = await Order.findById(orderid);
+  if (!order) {
+    return res.status(400).json({
+      error: "No order found with this id",
+    });
+  }
+  if (order.items.length === 1) {
+    return res.status(400).json({
+      error: "You cannot delete the only item in the order",
+    });
+  }
+  if (order.status === "approved") {
+    return res.status(400).json({
+      error: "You cannot delete approved order",
+    });
+  }
+  if (order.instituteid.toString() !== req.user._id.toString()) {
+    return res.status(400).json({
+      error: "You are not authorized to delete this order",
+    });
+  }
+  const item = order.items.find((item) => {
+    return item._id.toString() === itemid.toString();
+  });
+  if (!item) {
+    return res.status(400).json({
+      error: "No item found with this id",
+    });
+  }
+  order.items.pull(item);
+  await order.save();
+  res.json({
+    message: "Item deleted successfully",
+  });
+});
 module.exports = {
   createorder,
   getallorders,
@@ -363,4 +405,5 @@ module.exports = {
   additems,
   modifyorder,
   lockorder,
+  deleteitem,
 };

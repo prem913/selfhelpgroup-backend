@@ -15,6 +15,7 @@ const {
   additems,
   modifyorder,
   lockorder,
+  deleteitem,
 } = require("../controllers/ordercontroller");
 router.post("/postorder", protectinstitute, createorder);
 router.get("/", protectshg, getallorders);
@@ -26,4 +27,5 @@ router.post("/additem", additems);
 router.post("/lock", protectinstitute, lockorder);
 router.delete("/deleteorder", protectinstitute, deleteorder);
 router.put("/modifyorder/:id", protectinstitute, modifyorder);
+router.delete("/deleteitem", protectinstitute, deleteitem);
 module.exports = router;

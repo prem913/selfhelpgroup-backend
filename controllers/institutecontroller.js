@@ -118,7 +118,8 @@ const registerinstitute = asyncHandler(async (req, res) => {
 // });
 
 const approveorder = asyncHandler(async (req, res) => {
-  const { orderid, shgId } = req.body;
+  const { orderid, shgId, products } = req.body;
+  const selectedproducts = [];
   if (!orderid || !shgId) {
     return res.status(400).json({
       error: "Please provide orderid and shgId",
@@ -156,44 +157,75 @@ const approveorder = asyncHandler(async (req, res) => {
       }
     });
   });
-  await Order.findByIdAndUpdate(orderid, {
-    $push: {
-      approvedbid: {
-        shgId: shgId,
-        shgname: shgfind.shgname,
-        shgcontact: shgfind.shgcontact,
-        shglocation: shgfind.shglocation,
-        products: shgfind.products,
-      },
-    },
-  });
+  const check = async () => {
+    return new Promise((resolve, reject) => {
+      shgfind.products.forEach((product) => {
+        products.forEach((item, index) => {
+          if (item.quantity > product.quantity) {
+            reject("quantiy is greater than quantity in bid");
+          }
+          if (product._id.toString() === item.productid.toString()) {
+            selectedproducts.push({
+              shgproduct: product.shgproduct,
+              quantity: item.quantity,
+              unit: product.unit,
+              unitprice: product.unitprice,
+              totalprice: product.totalprice,
+            });
+          }
+          if (index === products.length - 1) {
+            resolve();
+          }
+        });
+      });
+    });
+  };
+  check()
+    .then(async () => {
+      await Order.findByIdAndUpdate(orderid, {
+        $push: {
+          approvedbid: {
+            shgId: shgId,
+            shgname: shgfind.shgname,
+            shgcontact: shgfind.shgcontact,
+            shglocation: shgfind.shglocation,
+            products: selectedproducts,
+          },
+        },
+      });
 
-  shgfind.status = "approved";
-  const shgdata = await shg.findByIdAndUpdate(shgId, {
-    $push: {
-      orders: {
-        orderid: orderid,
-        department: req.user.department,
-        institutename: order.institutename,
-        institutelocation: order.institutelocation,
-        products: shgfind.products,
-      },
-    },
-  });
-  await order.save();
-  await shgdata.save();
-  const shgfromshgmodel = await shg.findById(shgId);
-  if (shgfromshgmodel.devicetoken) {
-    sendnotification(
-      shgfromshgmodel.devicetoken,
-      order.institutename,
-      order.department,
-      order.status
-    );
-  }
-  res.json({
-    message: "Order approved successfully",
-  });
+      shgfind.status = "approved";
+      const shgdata = await shg.findByIdAndUpdate(shgId, {
+        $push: {
+          orders: {
+            orderid: orderid,
+            department: req.user.department,
+            institutename: order.institutename,
+            institutelocation: order.institutelocation,
+            products: selectedproducts,
+          },
+        },
+      });
+      await order.save();
+      await shgdata.save();
+      const shgfromshgmodel = await shg.findById(shgId);
+      if (shgfromshgmodel.devicetoken) {
+        sendnotification(
+          shgfromshgmodel.devicetoken,
+          order.institutename,
+          order.department,
+          order.status
+        );
+      }
+      res.json({
+        message: "Order approved successfully",
+      });
+    })
+    .catch((err) => {
+      res.status(400).json({
+        error: err,
+      });
+    });
 });
 
 const saveorder = asyncHandler(async (req, res) => {
@@ -254,4 +286,34 @@ const getsavedorder = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { registerinstitute, approveorder, saveorder, getsavedorder };
+const deletesavedorder = asyncHandler(async (req, res) => {
+  const { itemid } = req.body;
+  if (!itemid) {
+    return res.status(400).json({
+      error: "Please provide itemid",
+    });
+  }
+  const item = req.user.savedorders.find(
+    (item) => item.itemid.toString() === itemid
+  );
+  if (!item) {
+    return res.status(400).json({
+      error: "No item found with this id",
+    });
+  }
+  req.user.savedorders = req.user.savedorders.filter(
+    (item) => item.itemid.toString() !== itemid
+  );
+  await req.user.save();
+  res.status(200).json({
+    message: "Item deleted successfully",
+  });
+});
+
+module.exports = {
+  registerinstitute,
+  approveorder,
+  saveorder,
+  getsavedorder,
+  deletesavedorder,
+};
