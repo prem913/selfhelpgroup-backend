@@ -101,6 +101,14 @@ const ordermodel = mongoose.Schema(
                 unit: {
                   type: String,
                 },
+                unitprice: {
+                  type: Number,
+                  required: true,
+                },
+                totalprice: {
+                  type: Number,
+                  required: true,
+                },
                 manufacturingdate: {
                   type: Date,
                 },
@@ -145,9 +153,9 @@ const ordermodel = mongoose.Schema(
               type: String,
             },
             products: [],
-            status: {
-              type: String,
-              enum: ["pending", "completed"],
+            delivered: {
+              type: Boolean,
+              default: false,
             },
           },
           { timestamps: true }

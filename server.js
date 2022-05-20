@@ -3,6 +3,7 @@ const app = express();
 const dbconnect = require("./config/db");
 const cors = require("cors");
 const { errorHandler } = require("./middleware/errorMiddleware");
+
 require("dotenv").config();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -24,7 +25,7 @@ app.use("/shg", require("./routes/shgroute"));
 app.use("/department", require("./routes/departmentroute"));
 app.use("/order", require("./routes/orderroute"));
 app.use("/institute", require("./routes/instituteroute"));
-app.use("/ceo",require("./routes/ceoroute"))
+app.use("/ceo", require("./routes/ceoroute"));
 //middlewares
 app.use(errorHandler);
 const port = process.env.PORT || 5000;
