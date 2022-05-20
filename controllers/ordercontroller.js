@@ -103,7 +103,6 @@ const modifyorder = asyncHandler(async (req, res) => {
         error: "You are not authorized to update this order",
       });
     }
-    const filtereditemdata = [];
     if (orderdata.status === "pending") {
       const check = async () => {
         return new Promise((resolve, reject) => {
@@ -115,19 +114,7 @@ const modifyorder = asyncHandler(async (req, res) => {
             if (!itemdata) {
               reject("Item not found");
             }
-            let check = false;
-            orderdata.items.forEach(async (orderitem, index1) => {
-              if (orderitem.itemid.toString() === item.itemid.toString()) {
-                if (item.itemquantity !== orderitem.itemquantity) {
-                  check = true;
-                  orderdata.items[index1].itemquantity = item.itemquantity;
-                  await orderdata.save();
-                }
-              }
-            });
-            if (check === false) {
-              filtereditemdata.push(item);
-            }
+
             // if (itemtype === "loose" && !itemunit) {
             //   return res.status(400).json({
             //     error: "Please provide unit with quantity",
@@ -135,6 +122,8 @@ const modifyorder = asyncHandler(async (req, res) => {
             // }
 
             if (index === items.length - 1) {
+              orderdata.items = [];
+              await orderdata.save();
               resolve();
             }
           });
@@ -143,7 +132,7 @@ const modifyorder = asyncHandler(async (req, res) => {
       check()
         .then(async () => {
           // orderdata.items = itemdata;
-          await filtereditemdata.forEach(async ({ itemid, itemquantity }) => {
+          await items.forEach(async ({ itemid, itemquantity }) => {
             const item = await itemsmodel.findById(itemid);
             if (!item) {
               return res.status(400).json({
