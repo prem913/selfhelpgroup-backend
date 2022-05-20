@@ -77,10 +77,12 @@ const createorder = asyncHandler(async (req, res) => {
         });
       });
   } catch (err) {
-    res.status(500).json({
-      error: err.message,
-    });
     console.log(err);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error!",
+      error: err,
+    });
   }
 });
 
@@ -168,221 +170,301 @@ const modifyorder = asyncHandler(async (req, res) => {
       });
     }
   } catch (err) {
-    res.status(500).json({
-      error: err.message,
-    });
     console.log(err);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error!",
+      error: err,
+    });
   }
 });
 
 const getallorders = asyncHandler(async (req, res) => {
-  const orders = await Order.find({ status: "approved" });
+  try {
+    const orders = await Order.find({ status: "approved" });
 
-  const orderdata = [];
-  // orders.filter((order) => {
-  //   req.user.products.forEach((product) => {
-  //     if (order.itemname === product.name) {
-  //       orderdata.push(order);
-  //       return;
-  //     }
-  //   });
-  // });
-  orders.forEach((order) => {
-    const item = order.items.find((item) => {
-      const product = req.user.products.find((product) => {
-        return product.name === item.itemname;
+    const orderdata = [];
+    // orders.filter((order) => {
+    //   req.user.products.forEach((product) => {
+    //     if (order.itemname === product.name) {
+    //       orderdata.push(order);
+    //       return;
+    //     }
+    //   });
+    // });
+    orders.forEach((order) => {
+      const item = order.items.find((item) => {
+        const product = req.user.products.find((product) => {
+          return product.name === item.itemname;
+        });
+        return product;
       });
-      return product;
+      if (item && order.institutelocation === req.user.location) {
+        orderdata.push(order);
+      }
     });
-    if (item && order.institutelocation === req.user.location) {
-      orderdata.push(order);
-    }
-  });
-  orderdata.sort((a, b) => {
-    return new Date(b.createdAt) - new Date(a.createdAt);
-  });
-  // req.user.products.forEach((product) => {
-  //   orders.forEach((order) => {
-  //     order.items.forEach((item) => {
-  //       if (item.itemname === product.name) {
-  //         orderdata.push(order);
-  //         return;
-  //       }
-  //     });
-  //   });
-  // });
-  res.json({
-    message: "Orders fetched successfully",
-    orders: orderdata,
-  });
+    orderdata.sort((a, b) => {
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+    // req.user.products.forEach((product) => {
+    //   orders.forEach((order) => {
+    //     order.items.forEach((item) => {
+    //       if (item.itemname === product.name) {
+    //         orderdata.push(order);
+    //         return;
+    //       }
+    //     });
+    //   });
+    // });
+    res.json({
+      message: "Orders fetched successfully",
+      orders: orderdata,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error!",
+      error: err,
+    });
+  }
 });
 
 const getorderbydepartment = asyncHandler(async (req, res) => {
-  const orders = await Order.find({ departmentid: req.user._id });
-  orders.sort((a, b) => {
-    return new Date(b.createdAt) - new Date(a.createdAt);
-  });
-  orders.forEach((order) => {
-    if (order.bid.length)
-      order.bid.sort((a, b) => b.products.length - a.products.length);
-  });
-  res.json({
-    message: "Orders fetched successfully",
-    orders: orders,
-  });
+  try {
+    const orders = await Order.find({ departmentid: req.user._id });
+    orders.sort((a, b) => {
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+    orders.forEach((order) => {
+      if (order.bid.length)
+        order.bid.sort((a, b) => b.products.length - a.products.length);
+    });
+    res.json({
+      message: "Orders fetched successfully",
+      orders: orders,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error!",
+      error: err,
+    });
+  }
 });
 
 const getorderbyinstitute = asyncHandler(async (req, res) => {
-  const orders = await Order.find({ instituteid: req.user._id });
-  orders.sort((a, b) => {
-    return new Date(b.createdAt) - new Date(a.createdAt);
-  });
-  res.json({
-    message: "Orders fetched successfully",
-    orders: orders,
-  });
+  try {
+    const orders = await Order.find({ instituteid: req.user._id });
+    orders.sort((a, b) => {
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+    res.json({
+      message: "Orders fetched successfully",
+      orders: orders,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error!",
+      error: err,
+    });
+  }
 });
 const deleteorder = asyncHandler(async (req, res) => {
-  const { orderid } = req.body;
-  if (!orderid) {
-    return res.status(400).json({
-      error: "Please provide orderid",
+  try {
+    const { orderid } = req.body;
+    if (!orderid) {
+      return res.status(400).json({
+        error: "Please provide orderid",
+      });
+    }
+    const order = await Order.findById(orderid);
+    if (!order) {
+      return res.status(400).json({
+        error: "No order found with this id",
+      });
+    }
+    if (order.instituteid.toString() !== req.user._id.toString()) {
+      return res.status(400).json({
+        error: "You are not authorized to delete this order",
+      });
+    }
+    if (order.status === "approved") {
+      return res.status(400).json({
+        error: "You cannot delete approved order",
+      });
+    }
+    await Order.findByIdAndDelete(orderid);
+    res.json({
+      message: "Order deleted successfully",
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error!",
+      error: err,
     });
   }
-  const order = await Order.findById(orderid);
-  if (!order) {
-    return res.status(400).json({
-      error: "No order found with this id",
-    });
-  }
-  if (order.instituteid.toString() !== req.user._id.toString()) {
-    return res.status(400).json({
-      error: "You are not authorized to delete this order",
-    });
-  }
-  if (order.status === "approved") {
-    return res.status(400).json({
-      error: "You cannot delete approved order",
-    });
-  }
-  await Order.findByIdAndDelete(orderid);
-  res.json({
-    message: "Order deleted successfully",
-  });
 });
 
 const getallitems = asyncHandler(async (req, res) => {
-  const items = await itemsmodel.find().select("-__v");
-  res.status(200).json(items);
+  try {
+    const items = await itemsmodel.find().select("-__v");
+    res.status(200).json(items);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error!",
+      error: err,
+    });
+  }
 });
 
 const additems = asyncHandler(async (req, res) => {
-  const { itemtype, itemdescription, itemunit, itemname, itemprice } = req.body;
-  const itemcheck = await itemsmodel.findOne({ itemname });
-  if (itemcheck) {
-    return res.status(400).json({
-      error: "Item already exists",
-    });
-  }
-  if (!itemname || !itemdescription || !itemtype || !itemprice) {
-    res.status(400).json({
-      message: "provide all details",
-    });
-    return;
-  }
-  if (itemtype === "loose" && !itemunit) {
-    res.status(400).json({
-      message: "provide unit with quantity for loose type products",
-    });
-    return;
-  }
-  const item = {
-    itemtype,
-    itemdescription,
-    itemname,
-    itemunit,
-    itemprice,
-  };
-  const newitem = new itemsmodel(item);
-  await newitem.save();
+  try {
+    const { itemtype, itemdescription, itemunit, itemname, itemprice } =
+      req.body;
+    const itemcheck = await itemsmodel.findOne({ itemname });
+    if (itemcheck) {
+      return res.status(400).json({
+        error: "Item already exists",
+      });
+    }
+    if (!itemname || !itemdescription || !itemtype || !itemprice) {
+      res.status(400).json({
+        message: "provide all details",
+      });
+      return;
+    }
+    if (itemtype === "loose" && !itemunit) {
+      res.status(400).json({
+        message: "provide unit with quantity for loose type products",
+      });
+      return;
+    }
+    const item = {
+      itemtype,
+      itemdescription,
+      itemname,
+      itemunit,
+      itemprice,
+    };
+    const newitem = new itemsmodel(item);
+    await newitem.save();
 
-  res.status(200).json({
-    message: "done",
-  });
+    res.status(200).json({
+      message: "done",
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error!",
+      error: err,
+    });
+  }
 });
 
 const lockorder = asyncHandler(async (req, res) => {
-  const { orderid } = req.body;
-  if (!orderid) {
-    return res.status(400).json({
-      error: "Please provide orderid and status",
+  try {
+    const { orderid } = req.body;
+    if (!orderid) {
+      return res.status(400).json({
+        error: "Please provide orderid and status",
+      });
+    }
+    const order = await Order.findById(orderid);
+    if (!order) {
+      return res.status(400).json({
+        error: "No order found with this id",
+      });
+    }
+    if (order.instituteid.toString() !== req.user._id.toString()) {
+      return res.status(400).json({
+        error: "You are not authorized to approve this order",
+      });
+    }
+    if (order.status === "approved") {
+      return res.status(400).json({
+        error: "Order already approved",
+      });
+    }
+    order.status = "approved";
+    sendEmail(
+      order.email,
+      order._id.toString(),
+      order.status,
+      order.department
+    );
+    await order.save();
+    res.json({
+      message: "Order approved for display",
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error!",
+      error: err,
     });
   }
-  const order = await Order.findById(orderid);
-  if (!order) {
-    return res.status(400).json({
-      error: "No order found with this id",
-    });
-  }
-  if (order.instituteid.toString() !== req.user._id.toString()) {
-    return res.status(400).json({
-      error: "You are not authorized to approve this order",
-    });
-  }
-  if (order.status === "approved") {
-    return res.status(400).json({
-      error: "Order already approved",
-    });
-  }
-  order.status = "approved";
-  sendEmail(order.email, order._id.toString(), order.status, order.department);
-  await order.save();
-  res.json({
-    message: "Order approved for display",
-  });
 });
 
 const deleteitem = asyncHandler(async (req, res) => {
-  const { orderid, itemid } = req.body;
-  if (!itemid || !orderid) {
-    return res.status(400).json({
-      error: "Please provide itemid and orderid",
+  try {
+    const { orderid, itemid } = req.body;
+    if (!itemid || !orderid) {
+      return res.status(400).json({
+        error: "Please provide itemid and orderid",
+      });
+    }
+    const order = await Order.findById(orderid);
+    if (!order) {
+      return res.status(400).json({
+        error: "No order found with this id",
+      });
+    }
+    if (order.items.length === 1) {
+      return res.status(400).json({
+        error: "You cannot delete the only item in the order",
+      });
+    }
+    if (order.status === "approved") {
+      return res.status(400).json({
+        error: "You cannot delete approved order",
+      });
+    }
+    if (order.instituteid.toString() !== req.user._id.toString()) {
+      return res.status(400).json({
+        error: "You are not authorized to delete this order",
+      });
+    }
+    const item = order.items.find((item) => {
+      return item._id.toString() === itemid.toString();
+    });
+    if (!item) {
+      return res.status(400).json({
+        error: "No item found with this id",
+      });
+    }
+    order.items.pull(item);
+    await order.save();
+    res.json({
+      message: "Item deleted successfully",
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error!",
+      error: err,
     });
   }
-  const order = await Order.findById(orderid);
-  if (!order) {
-    return res.status(400).json({
-      error: "No order found with this id",
-    });
-  }
-  if (order.items.length === 1) {
-    return res.status(400).json({
-      error: "You cannot delete the only item in the order",
-    });
-  }
-  if (order.status === "approved") {
-    return res.status(400).json({
-      error: "You cannot delete approved order",
-    });
-  }
-  if (order.instituteid.toString() !== req.user._id.toString()) {
-    return res.status(400).json({
-      error: "You are not authorized to delete this order",
-    });
-  }
-  const item = order.items.find((item) => {
-    return item._id.toString() === itemid.toString();
-  });
-  if (!item) {
-    return res.status(400).json({
-      error: "No item found with this id",
-    });
-  }
-  order.items.pull(item);
-  await order.save();
-  res.json({
-    message: "Item deleted successfully",
-  });
 });
 module.exports = {
   createorder,
