@@ -3,6 +3,7 @@ const {
   getOrderbyId,
   getOrdersbyDepartment,
   getDepartments,
+  changeBidPrice,
 } = require("../controllers/ceocontroller");
 const {
   protectdepartment,
@@ -17,4 +18,6 @@ router.post(
   getOrdersbyDepartment
 );
 router.get("/getdepartments", [protectdepartment, protectceo], getDepartments);
+
+router.post("/changebidprice",changeBidPrice); 
 module.exports = router;

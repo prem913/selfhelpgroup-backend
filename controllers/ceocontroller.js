@@ -1,6 +1,7 @@
 const asynchandler = require("express-async-handler");
 const ordermodel = require("../models/ordermodel");
 const departmentmodel = require("../models/departmentmodel");
+const { default: mongoose } = require("mongoose");
 const getOrderbyId = asynchandler(async (req, res) => {
   try {
     const { orderId } = req.body;
@@ -93,4 +94,39 @@ const getDepartments = asynchandler(async (req, res) => {
   }
 });
 
-module.exports = { getOrderbyId, getOrdersbyDepartment, getDepartments };
+const changeBidPrice = asynchandler(async (req,res)=>{
+  const {bidid,productid,unitprice} = req.body;
+  if(!bidid || !productid || !unitprice){
+    res.status(400).json({
+      success:false,
+      message: "please provide all details"
+    })
+    return;
+  }
+  const order = await ordermodel.findOne({"approvedbid._id":bidid});
+  if(!order) {
+    res.status(400).json({
+      success: false,
+      message: "No bid is found with the given bidid"
+    })
+    return;
+  }
+  order.approvedbid.forEach(bid => {
+    if(bid._id.equals(bidid)){
+      bid.products.forEach(product=>{
+        if(product._id.equals(productid)){
+          product.unitprice = unitprice;
+          product.totalprice = product.quantity * unitprice;
+        }
+      })
+    }
+  });
+
+  await order.save();
+  res.json({
+    success: true,
+    order
+  });
+});
+
+module.exports = { getOrderbyId, getOrdersbyDepartment, getDepartments,changeBidPrice };
