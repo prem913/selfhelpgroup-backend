@@ -262,6 +262,10 @@ const saveorder = asyncHandler(async (req, res) => {
           }
           const itemdata = await itemsmodel.findById(item.itemid);
           item.itemname = itemdata.itemname;
+          item.itemtype = itemdata.itemtype;
+          item.itemunit = itemdata.itemunit;
+          item.itemprice = itemdata.itemprice;
+          item.itemdescription = itemdata.itemdescription;
           if (!itemdata) {
             reject("Item not found");
           }
@@ -278,6 +282,10 @@ const saveorder = asyncHandler(async (req, res) => {
             itemid: item.itemid,
             itemname: item.itemname,
             itemquantity: item.itemquantity,
+            itemtype: item.itemtype,
+            itemunit: item.itemunit,
+            itemdescription: item.itemdescription,
+            itemprice: item.itemprice,
           });
         });
         await req.user.save();
@@ -310,7 +318,19 @@ const getsavedorder = asyncHandler(async (req, res) => {
     }
     return res.status(200).json({
       message: "Saved orders found",
-      savedorders: savedorders,
+      savedorders: [
+        ...savedorders.map((item) => {
+          return {
+            _id: item.itemid,
+            itemname: item.itemname,
+            itemquantity: item.itemquantity,
+            itemtype: item.itemtype,
+            itemunit: item.itemunit,
+            itemdescription: item.itemdescription,
+            itemprice: item.itemprice,
+          };
+        }),
+      ],
     });
   } catch (err) {
     console.log(err);

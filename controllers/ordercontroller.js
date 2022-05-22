@@ -3,6 +3,7 @@ const shg = require("../models/shgmodel");
 const asyncHandler = require("express-async-handler");
 const itemsmodel = require("../models/itemsmodel");
 const { sendEmail } = require("../utils/mail");
+const { sendordernotification } = require("../utils/notification");
 const createorder = asyncHandler(async (req, res) => {
   try {
     const orderdata = new Order();
@@ -65,6 +66,12 @@ const createorder = asyncHandler(async (req, res) => {
               },
             },
           });
+        });
+        const shglocation = await shg.find({ location: req.user.location });
+        shgdata.forEach((shg) => {
+          if (shg.devicetoken) {
+            sendordernotification(shg.devicetoken, req.user.name);
+          }
         });
         await req.user.save();
         res.json({
@@ -199,7 +206,8 @@ const getallorders = asyncHandler(async (req, res) => {
         });
         return product;
       });
-      if (item && order.institutelocation === req.user.location) {
+      //for adding product based filter add item&&
+      if (order.institutelocation === req.user.location) {
         orderdata.push(order);
       }
     });
@@ -395,12 +403,12 @@ const lockorder = asyncHandler(async (req, res) => {
       });
     }
     order.status = "approved";
-    sendEmail(
-      order.email,
-      order._id.toString(),
-      order.status,
-      order.department
-    );
+    // sendEmail(
+    //   order.email,
+    //   order._id.toString(),
+    //   order.status,
+    //   order.department
+    // );
     await order.save();
     res.json({
       message: "Order approved for display",
