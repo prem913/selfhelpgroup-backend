@@ -94,39 +94,44 @@ const getDepartments = asynchandler(async (req, res) => {
   }
 });
 
-const changeBidPrice = asynchandler(async (req,res)=>{
-  const {bidid,productid,unitprice} = req.body;
-  if(!bidid || !productid || !unitprice){
-    res.status(400).json({
-      success:false,
-      message: "please provide all details"
-    })
-    return;
-  }
-  const order = await ordermodel.findOne({"approvedbid._id":bidid});
-  if(!order) {
+const changeBidPrice = asynchandler(async (req, res) => {
+  const { bidid, productid, unitprice } = req.body;
+  if (!bidid || !productid || !unitprice) {
     res.status(400).json({
       success: false,
-      message: "No bid is found with the given bidid"
-    })
+      message: "please provide all details",
+    });
     return;
   }
-  order.approvedbid.forEach(bid => {
-    if(bid._id.equals(bidid)){
-      bid.products.forEach(product=>{
-        if(product._id.equals(productid)){
+  const order = await ordermodel.findOne({ "bid._id": bidid });
+  if (!order) {
+    res.status(400).json({
+      success: false,
+      message: "No bid is found with the given bidid",
+    });
+    return;
+  }
+  order.bid.forEach((bid) => {
+    if (bid._id.equals(bidid)) {
+      bid.products.forEach((product) => {
+        if (product._id.equals(productid)) {
           product.unitprice = unitprice;
           product.totalprice = product.quantity * unitprice;
         }
-      })
+      });
     }
   });
 
   await order.save();
   res.json({
     success: true,
-    order
+    order,
   });
 });
 
-module.exports = { getOrderbyId, getOrdersbyDepartment, getDepartments,changeBidPrice };
+module.exports = {
+  getOrderbyId,
+  getOrdersbyDepartment,
+  getDepartments,
+  changeBidPrice,
+};
