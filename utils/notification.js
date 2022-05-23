@@ -25,8 +25,8 @@ const sendordernotification = (token, institute) => {
   const message = {
     to: token,
     notification: {
-      title: `New Order`,
-      body: `A new order has been posted ${institute}`,
+      title: `नया आर्डर`,
+      body: `${institute} द्वारा एक नया आर्डर पोस्ट किया गया है `,
     },
   };
   fcm.send(message, (err, response) => {

@@ -68,7 +68,7 @@ const createorder = asyncHandler(async (req, res) => {
           });
         });
         const shglocation = await shg.find({ location: req.user.location });
-        shgdata.forEach((shg) => {
+        shglocation.forEach((shg) => {
           if (shg.devicetoken) {
             sendordernotification(shg.devicetoken, req.user.name);
           }
@@ -88,7 +88,7 @@ const createorder = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err,
     });
   }
 });
@@ -200,15 +200,27 @@ const getallorders = asyncHandler(async (req, res) => {
     //   });
     // });
     orders.forEach((order) => {
-      const item = order.items.find((item) => {
-        const product = req.user.products.find((product) => {
-          return product.name === item.itemname;
-        });
-        return product;
-      });
+      // const item = order.items.find((item) => {
+      //   const product = req.user.products.find((product) => {
+      //     return product.name === item.itemname;
+      //   });
+      //   return product;
+      // });
       //for adding product based filter add item&&
-      if (order.institutelocation === req.user.location) {
+
+      const date = new Date();
+      const orderdate = new Date(order.createdAt);
+      const diff = Math.abs(date - orderdate);
+      const diffDays = Math.ceil(diff / (1000 * 3600 * 24));
+      if (diffDays > 2 && !JSON.stringify(order.bid).includes(req.user._id)) {
         orderdata.push(order);
+      } else {
+        if (
+          order.institutelocation === req.user.location &&
+          !JSON.stringify(order.bid).includes(req.user._id)
+        ) {
+          orderdata.push(order);
+        }
       }
     });
     orderdata.sort((a, b) => {
