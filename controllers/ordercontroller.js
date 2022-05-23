@@ -67,12 +67,7 @@ const createorder = asyncHandler(async (req, res) => {
             },
           });
         });
-        const shglocation = await shg.find({ location: req.user.location });
-        shglocation.forEach((shg) => {
-          if (shg.devicetoken) {
-            sendordernotification(shg.devicetoken, req.user.name);
-          }
-        });
+
         await req.user.save();
         res.json({
           message: "Order registered successfully",
@@ -421,6 +416,12 @@ const lockorder = asyncHandler(async (req, res) => {
     //   order.status,
     //   order.department
     // );
+    const shglocation = await shg.find({ location: req.user.location });
+    shglocation.forEach((shg) => {
+      if (shg.devicetoken) {
+        sendordernotification(shg.devicetoken, req.user.name);
+      }
+    });
     await order.save();
     res.json({
       message: "Order approved for display",

@@ -173,6 +173,11 @@ const bid = asynchandler(async (req, res) => {
         error: "Please provide product and orderid",
       });
     }
+    if (Object.keys(product).length === 0) {
+      return res.status(400).json({
+        error: "Please provide products to bid",
+      });
+    }
     const order = await Order.findById(orderid);
     const shgdata = await shg.findById(req.user._id);
     if (!order) {
@@ -191,6 +196,7 @@ const bid = asynchandler(async (req, res) => {
     const check = async () => {
       return new Promise((resolve, reject) => {
         product.forEach((item, index) => {
+
           if (!item.productid || !item.quantity || !item.unitprice) {
             reject("Please provide product name quantity and unitprice");
           }
@@ -206,10 +212,8 @@ const bid = asynchandler(async (req, res) => {
           if (!product) {
             reject("Please add product first");
           }
-          if (index === product.length - 1) {
-            resolve();
-          }
         });
+        resolve();
       });
     };
     check()
