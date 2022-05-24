@@ -51,7 +51,7 @@ const createorder = asyncHandler(async (req, res) => {
         await orderdata.save();
 
         // orderdata.items = itemdata;
-        await items.forEach(async ({ itemid, itemquantity }) => {
+        await items.forEach(async ({ itemid, itemquantity, itemdescription }) => {
           const item = await itemsmodel.findById(itemid);
           await Order.findByIdAndUpdate(orderdata._id, {
             $push: {
@@ -59,7 +59,7 @@ const createorder = asyncHandler(async (req, res) => {
                 itemid: itemid,
                 itemname: item.itemname,
                 itemtype: item.itemtype,
-                itemdescription: item.itemdescription,
+                itemdescription: itemdescription,
                 itemprice: item.itemprice,
                 itemunit: item.itemunit,
                 itemquantity: itemquantity,
@@ -136,7 +136,7 @@ const modifyorder = asyncHandler(async (req, res) => {
       check()
         .then(async () => {
           // orderdata.items = itemdata;
-          await items.forEach(async ({ itemid, itemquantity }) => {
+          await items.forEach(async ({ itemid, itemquantity, itemdescription }) => {
             const item = await itemsmodel.findById(itemid);
             if (!item) {
               return res.status(400).json({
@@ -149,7 +149,7 @@ const modifyorder = asyncHandler(async (req, res) => {
                   itemid: itemid,
                   itemname: item.itemname,
                   itemtype: item.itemtype,
-                  itemdescription: item.itemdescription,
+                  itemdescription: itemdescription,
                   itemprice: item.itemprice,
                   itemunit: item.itemunit,
                   itemquantity: itemquantity,
@@ -342,20 +342,21 @@ const getallitems = asyncHandler(async (req, res) => {
 
 const additems = asyncHandler(async (req, res) => {
   try {
-    const { itemtype, itemdescription, itemunit, itemname, itemprice } =
+    const { itemtype, itemunit, itemname, itemprice } =
       req.body;
+    if (!itemname || !itemtype || !itemprice) {
+      res.status(400).json({
+        message: "provide all details",
+      });
+      return;
+    }
     const itemcheck = await itemsmodel.findOne({ itemname });
     if (itemcheck) {
       return res.status(400).json({
         error: "Item already exists",
       });
     }
-    if (!itemname || !itemdescription || !itemtype || !itemprice) {
-      res.status(400).json({
-        message: "provide all details",
-      });
-      return;
-    }
+
     if (itemtype === "loose" && !itemunit) {
       res.status(400).json({
         message: "provide unit with quantity for loose type products",
@@ -364,7 +365,6 @@ const additems = asyncHandler(async (req, res) => {
     }
     const item = {
       itemtype,
-      itemdescription,
       itemname,
       itemunit,
       itemprice,

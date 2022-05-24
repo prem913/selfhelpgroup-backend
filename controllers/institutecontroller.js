@@ -260,12 +260,16 @@ const saveorder = asyncHandler(async (req, res) => {
           if (!item.itemid || !item.itemquantity) {
             reject("Please provide all the details itemid and quantity");
           }
+          req.user.savedorders.forEach((savedorder) => {
+            if (savedorder.itemid.toString() === item.itemid.toString()) {
+              reject("Item already saved");
+            }
+          });
           const itemdata = await itemsmodel.findById(item.itemid);
           item.itemname = itemdata.itemname;
           item.itemtype = itemdata.itemtype;
           item.itemunit = itemdata.itemunit;
           item.itemprice = itemdata.itemprice;
-          item.itemdescription = itemdata.itemdescription;
           if (!itemdata) {
             reject("Item not found");
           }

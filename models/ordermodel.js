@@ -59,7 +59,6 @@ const ordermodel = mongoose.Schema(
         },
         itemdescription: {
           type: String,
-          required: true,
         },
       },
     ],
