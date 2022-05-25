@@ -162,16 +162,18 @@ const approveorder = asyncHandler(async (req, res) => {
     }
     order.items.forEach((item) => {
       shgfind.products.forEach((product) => {
-        if (item.itemname === product.shgproduct) {
-          item.approvedquantity = item.approvedquantity + product.quantity;
-        }
+        products.forEach((product1) => {
+          if (product._id.toString() === product1.productid.toString() && item.itemname === product.shgproduct) {
+            item.approvedquantity = item.approvedquantity + product1.quantity;
+          }
+        });
       });
     });
     const check = async () => {
       return new Promise((resolve, reject) => {
         shgfind.products.forEach((product) => {
           products.forEach((item, index) => {
-            if (item.quantity > product.quantity) {
+            if (product._id.toString() === item.productid.toString() && item.quantity > product.quantity) {
               reject("quantiy is greater than quantity in bid");
             }
             if (product._id.toString() === item.productid.toString()) {
@@ -180,8 +182,11 @@ const approveorder = asyncHandler(async (req, res) => {
                 quantity: item.quantity,
                 unit: product.unit,
                 unitprice: product.unitprice,
-                totalprice: product.totalprice,
+                totalprice: item.quantity * product.unitprice,
               });
+            }
+            if (selectedproducts.length !== products.length) {
+              reject("Product is not present in order");
             }
             if (index === products.length - 1) {
               resolve();
@@ -379,10 +384,79 @@ const deletesavedorder = asyncHandler(async (req, res) => {
   }
 });
 
+const verifydelivery = asyncHandler(async (req, res) => {
+  try {
+    const { orderid, approvedbidid } = req.body;
+    if (!orderid || !approvedbidid) {
+      return res.status(400).json({
+        error: "Please provide orderid and approvedbidid",
+      });
+    }
+    const order = await Order.findById(orderid);
+    if (!order) {
+      return res.status(400).json({
+        error: "No order found with this id",
+      });
+    }
+    if (order.instituteid.toString() !== req.user._id.toString()) {
+      return res.status(400).json({
+        error: "You are not authorized to verify this order",
+      });
+    }
+    const findbid = () => {
+      return new Promise((resolve, reject) => {
+        order.approvedbid.map((approvedbid) => {
+          if (approvedbid._id.toString() === approvedbidid.toString()) {
+            resolve(approvedbid);
+          }
+        });
+        reject("No bid found with this id");
+      });
+    }
+    findbid().then(async (approvedbid) => {
+      if (approvedbid.delivered === false) {
+        return res.status(400).json({
+          error: "This order is not yet delivered",
+        });
+      }
+      if (approvedbid.deliveryverified === true) {
+        return res.status(400).json({
+          error: "This order is already verified",
+        });
+      }
+      approvedbid.deliveryverified = true;
+      const shgdata = await shg.findById(approvedbid.shgId);
+      shgdata.orders.forEach((order) => {
+        if (JSON.stringify(order.products) === JSON.stringify(approvedbid.products)) {
+          order.deliveryverified = true;
+        }
+      });
+      await shgdata.save();
+      await order.save();
+      return res.status(200).json({
+        message: "Order verified successfully",
+      });
+    }).catch((err) => {
+      return res.status(400).json({
+        success: false,
+        error: err,
+      });
+    });
+  }
+  catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error!",
+      error: err,
+    });
+  }
+});
 module.exports = {
   registerinstitute,
   approveorder,
   saveorder,
   getsavedorder,
   deletesavedorder,
+  verifydelivery,
 };

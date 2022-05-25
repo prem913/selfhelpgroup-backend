@@ -3,7 +3,7 @@ const Order = require("../models/ordermodel");
 const asynchandler = require("express-async-handler");
 const { generateOTP, sendotp } = require("../utils/otp");
 const { createJwtToken } = require("../utils/token");
-
+const ordermodel = require("../models/ordermodel");
 const registershg = asynchandler(async (req, res) => {
   try {
     console.log(req.body);
@@ -406,19 +406,42 @@ const deleteproduct = asynchandler(async (req, res) => {
 
 const getapprovedproducts = asynchandler(async (req, res) => {
   try {
-    const shgdata = await shg.findById(req.user._id);
-    shgdata.orders.sort((a, b) => {
+    req.user.orders.sort((a, b) => {
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
+    const filtered = req.user.orders.filter((order) =>
+      order.deliveryverified === false
+    );
     res.status(200).json({
-      products: shgdata.orders,
+      products: filtered,
     });
   } catch (err) {
     console.log(err);
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
+    });
+  }
+});
+
+const getcompletedorders = asynchandler(async (req, res) => {
+  try {
+    req.user.orders.sort((a, b) => {
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+    const filtered = req.user.orders.filter((order) =>
+      order.deliveryverified === true
+    );
+    res.status(200).json({
+      products: filtered,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error!",
+      message: err.message,
     });
   }
 });
@@ -440,6 +463,54 @@ const getprofile = asynchandler(async (req, res) => {
     });
   }
 });
+
+const orderdelivered = asynchandler(async (req, res) => {
+  try {
+    const { orderid } = req.body;
+    if (!orderid) {
+      return res.status(400).json({
+        error: "Please provide orderid",
+      });
+    }
+    const shgdata = await shg.findById(req.user._id);
+    const order = shgdata.orders.find(
+      (order) => order._id.toString() === orderid
+    );
+    if (!order) {
+      return res.status(400).json({
+        error: "order not found",
+      });
+    }
+    if (order.delivered) {
+      return res.status(400).json({
+        error: "order already delivered",
+      });
+    }
+    order.delivered = true;
+    const orderfromordermodel = await ordermodel.findById(order.orderid);
+    orderfromordermodel.approvedbid.forEach((bid) => {
+      if (bid.shgId.toString() === shgdata._id.toString()) {
+        if (JSON.stringify(bid.products) === JSON.stringify(order.products)) {
+          bid.delivered = true;
+        }
+      }
+    });
+    await shgdata.save();
+    await orderfromordermodel.save();
+    res.status(200).json({
+      message: "order status updated successfully",
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error!",
+      error: err,
+    });
+  }
+});
+
 module.exports = {
   registershg,
   shglogin,
@@ -451,4 +522,6 @@ module.exports = {
   deleteproduct,
   getapprovedproducts,
   getprofile,
+  orderdelivered,
+  getcompletedorders
 };

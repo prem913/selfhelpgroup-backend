@@ -156,6 +156,10 @@ const ordermodel = mongoose.Schema(
               type: Boolean,
               default: false,
             },
+            deliveryverified: {
+              type: Boolean,
+              default: false,
+            },
           },
           { timestamps: true }
         ),
