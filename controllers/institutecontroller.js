@@ -171,12 +171,13 @@ const approveorder = asyncHandler(async (req, res) => {
     });
     const check = async () => {
       return new Promise((resolve, reject) => {
-        shgfind.products.forEach((product) => {
+        shgfind.products.forEach((product, index2) => {
           products.forEach((item, index) => {
             if (product._id.toString() === item.productid.toString() && item.quantity > product.quantity) {
               reject("quantiy is greater than quantity in bid");
             }
             if (product._id.toString() === item.productid.toString()) {
+              console.log("exec")
               selectedproducts.push({
                 shgproduct: product.shgproduct,
                 quantity: item.quantity,
@@ -185,10 +186,12 @@ const approveorder = asyncHandler(async (req, res) => {
                 totalprice: item.quantity * product.unitprice,
               });
             }
-            if (selectedproducts.length !== products.length) {
-              reject("Product is not present in order");
-            }
-            if (index === products.length - 1) {
+            if (index === products.length - 1 && index2 === shgfind.products.length - 1) {
+              if (selectedproducts.length !== products.length) {
+                console.log(selectedproducts);
+                console.log(products);
+                reject("Product is not present in order");
+              }
               resolve();
             }
           });
