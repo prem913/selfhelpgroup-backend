@@ -6,8 +6,8 @@ const sendnotification = (token, institute, department, status) => {
   const message = {
     to: token,
     notification: {
-      title: `Order ${status}`,
-      body: `Your Order for ${institute} has been ${status} by ${department}`,
+      title: `आर्डर स्वीकृत`,
+      body: `आपका आर्डर ${institute} द्वारा स्वीकृत कर लिया गया है`,
     },
   };
   fcm.send(message, (err, response) => {
@@ -37,7 +37,27 @@ const sendordernotification = (token, institute) => {
     }
   });
 };
+
+const senddeliverynotification = (token, institute) => {
+  const serverKey = process.env.FCM_SERVER_KEY;
+  const fcm = new FCM(serverKey);
+  const message = {
+    to: token,
+    notification: {
+      title: `आर्डर प्राप्त`,
+      body: `आपका आर्डर ${institute} द्वारा प्राप्त कर लिया गया है`,
+    },
+  };
+  fcm.send(message, (err, response) => {
+    if (err) {
+      console.log("Something has gone wrong!");
+    } else {
+      console.log("Successfully sent with response: ", response);
+    }
+  });
+};
 module.exports = {
   sendnotification,
   sendordernotification,
+  senddeliverynotification
 };

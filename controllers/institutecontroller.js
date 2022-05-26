@@ -5,7 +5,7 @@ const { createJwtToken } = require("../utils/token");
 const bcrypt = require("bcryptjs");
 const Order = require("../models/ordermodel");
 const shg = require("../models/shgmodel");
-const { sendnotification } = require("../utils/notification");
+const { sendnotification, senddeliverynotification } = require("../utils/notification");
 const itemsmodel = require("../models/itemsmodel");
 const registerinstitute = asyncHandler(async (req, res) => {
   try {
@@ -231,8 +231,6 @@ const approveorder = asyncHandler(async (req, res) => {
           sendnotification(
             shgfromshgmodel.devicetoken,
             order.institutename,
-            order.department,
-            order.status
           );
         }
         res.json({
@@ -434,6 +432,9 @@ const verifydelivery = asyncHandler(async (req, res) => {
           order.deliveryverified = true;
         }
       });
+      if (shgdata.devicetoken) {
+        senddeliverynotification(shgdata.devicetoken, req.user.name);
+      }
       await shgdata.save();
       await order.save();
       return res.status(200).json({
