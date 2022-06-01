@@ -7,20 +7,51 @@ const Order = require("../models/ordermodel");
 const shg = require("../models/shgmodel");
 const { sendnotification, senddeliverynotification } = require("../utils/notification");
 const itemsmodel = require("../models/itemsmodel");
+const Zone = require("../models/zonemodel");
 const registerinstitute = asyncHandler(async (req, res) => {
   try {
-    const { name, location, contact, department, email, password } = req.body;
-    if (!name || !location || !contact || !department || !email || !password) {
+    const { name, location, contact, department, email, password, username } = req.body;
+    if (!name || !location || !contact || !department || !password) {
       return res.status(400).json({
         error:
-          "Please provide all the required fields name location contact department email and password",
+          "Please provide all the required fields name location contact department and password",
       });
     }
-    const isregistered = await Institute.findOne({ email });
-    if (isregistered) {
+    if (contact.length != 10) {
+      return res.status(400).json({
+        error:
+          "Please provide a valid contact number",
+      });
+    }
+    if (!username && !email) {
+      return res.status(400).json({
+        error:
+          "Please provide username or email",
+      });
+    }
+    if (email) {
+      const isregistered = await Institute.findOne({ email });
+      if (isregistered) {
+        res.json({
+          success: false,
+          message: "email is already registered",
+        });
+        return;
+      }
+    }
+    const check = await Institute.findOne({ username });
+    if (check) {
       res.json({
         success: false,
-        message: "email is already registered",
+        message: "username is already registered",
+      });
+      return;
+    }
+    const check2 = await Institute.findOne({ contact });
+    if (check2) {
+      res.json({
+        success: false,
+        message: "contact is already registered",
       });
       return;
     }
@@ -31,6 +62,16 @@ const registerinstitute = asyncHandler(async (req, res) => {
       });
       return;
     }
+    const zone = await Zone.findOne({ zonename: location });
+    if (!zone) {
+      res.json({
+        message: "zone not found",
+      });
+      return;
+    }
+    if (!zone.institutes) {
+      zone.institutes = [];
+    }
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
     const institute = new Institute({
@@ -40,9 +81,17 @@ const registerinstitute = asyncHandler(async (req, res) => {
       department,
       departmentid: departmentdata._id,
       email,
+      username,
       password: hashedPassword,
+      zoneid: zone._id,
+      zonename: zone.zonename,
     });
     await institute.save();
+    zone.institutes.push({
+      instituteid: institute._id,
+      institutename: name,
+    });
+    await zone.save();
     res.status(200).json({
       success: true,
       data: institute,

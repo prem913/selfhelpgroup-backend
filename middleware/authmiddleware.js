@@ -130,13 +130,39 @@ const combinedprotector = asyncHandler(async (req, res, next) => {
   }
 });
 
-const protectceo = (req,res,next)=>{
-  if(req.user.usertype !=="ceo"){
-    res.status(400);
-    throw new Error("Not Authorized");
+const protectceo = asyncHandler(async (req, res, next) => {
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    try {
+      //Get Token from header
+      token = req.headers.authorization.split(" ")[1];
+      //Verify Token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      //Get user from token
+      req.user = await departmentmodel.findById(decoded.id).select("-password");
+      if (!req.user) {
+        res.status(401);
+        throw new Error("Not Authorized");
+      }
+      if (req.user.usertype !== "ceo") {
+        res.status(401);
+        throw new Error("Not Authorized");
+      }
+      next();
+    } catch (error) {
+      console.log(error);
+      res.status(401);
+      throw new Error("Not Authorized");
+    }
   }
-  next();
-}
+  if (!token) {
+    res.status(401);
+    throw new Error("Not Authorized, No Token");
+  }
+});
 
 module.exports = {
   protectdepartment,

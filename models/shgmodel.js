@@ -72,6 +72,19 @@ const shgSchema = new mongoose.Schema(
         ),
       },
     ],
+    zone: [
+      {
+        zoneid: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Zone",
+          required: true,
+        },
+        zonename: {
+          type: String,
+          required: true,
+        },
+      }
+    ],
     otp: String,
     devicetoken: String,
   },

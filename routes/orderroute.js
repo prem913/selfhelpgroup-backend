@@ -4,6 +4,7 @@ const {
   protectinstitute,
   protectdepartment,
   protectshg,
+  protectceo
 } = require("../middleware/authmiddleware");
 const {
   createorder,
@@ -23,7 +24,7 @@ router.get("/department", protectdepartment, getorderbydepartment);
 router.get("/institute", protectinstitute, getorderbyinstitute);
 //both item route are public need to verify who can post items and who can get items
 router.get("/getallitems", getallitems);
-router.post("/additem", additems);
+router.post("/additem", protectceo, additems);
 router.post("/lock", protectinstitute, lockorder);
 router.delete("/deleteorder", protectinstitute, deleteorder);
 router.put("/modifyorder/:id", protectinstitute, modifyorder);

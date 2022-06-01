@@ -6,11 +6,16 @@ const { createJwtToken } = require("../utils/token");
 const ordermodel = require("../models/ordermodel");
 const registershg = asynchandler(async (req, res) => {
   try {
-    console.log(req.body);
     const { name, contact, location } = req.body;
     if (!name || !contact || !location) {
       res.status(400).json({
         error: "Please provide all the details name contact and location",
+      });
+    }
+    const check = await shg.findOne({ contact });
+    if (check) {
+      res.status(400).json({
+        error: "This contact number is already registered",
       });
     }
     const shgdata = req.body;
