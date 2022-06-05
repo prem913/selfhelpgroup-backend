@@ -12,6 +12,7 @@ const departmentmodel = mongoose.Schema(
         "social welfare",
         "women and child development",
         "ceo",
+        "nrlm"
       ],
     },
     usertype: {

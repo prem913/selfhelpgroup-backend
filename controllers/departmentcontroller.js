@@ -131,27 +131,7 @@ const instituteunderdepartment = asynchandler(async (req, res) => {
   }
 });
 
-const getshgdata = asynchandler(async (req, res) => {
-  try {
-    if (req.user.department !== "ceo") {
-      return res.status(400).json({
-        error: "You are not authorized to view this data",
-      });
-    }
-    const shgdata = await shg.find({});
-    res.json({
-      message: "SHG data",
-      data: shgdata,
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      success: false,
-      error: "Internal server error!",
-      error: err,
-    });
-  }
-});
+
 
 const profile = asynchandler(async (req, res) => {
   try {
@@ -186,6 +166,5 @@ module.exports = {
   registerdepartment,
   logindepartment,
   instituteunderdepartment,
-  getshgdata,
   profile,
 };

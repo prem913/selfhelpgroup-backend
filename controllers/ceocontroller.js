@@ -2,6 +2,7 @@ const asynchandler = require("express-async-handler");
 const ordermodel = require("../models/ordermodel");
 const departmentmodel = require("../models/departmentmodel");
 const institute = require("../models/institutemodel");
+const shg = require("../models/shgmodel");
 const { default: mongoose } = require("mongoose");
 const getOrderbyId = asynchandler(async (req, res) => {
   try {
@@ -176,11 +177,34 @@ const getallinstitutes = asynchandler(async (req, res) => {
   }
 })
 
+const getshgdata = asynchandler(async (req, res) => {
+  try {
+    if (req.user.department !== "ceo") {
+      return res.status(400).json({
+        error: "You are not authorized to view this data",
+      });
+    }
+    const shgdata = await shg.find({});
+    res.json({
+      message: "SHG data",
+      data: shgdata,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error!",
+      error: err,
+    });
+  }
+});
+
 module.exports = {
   getOrderbyId,
   getOrdersbyDepartment,
   getDepartments,
   changeBidPrice,
   getallorders,
-  getallinstitutes
+  getallinstitutes,
+  getshgdata
 };
