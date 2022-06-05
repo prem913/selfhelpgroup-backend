@@ -1,6 +1,7 @@
 const asynchandler = require("express-async-handler");
 const ordermodel = require("../models/ordermodel");
 const departmentmodel = require("../models/departmentmodel");
+const institute = require("../models/institutemodel");
 const { default: mongoose } = require("mongoose");
 const getOrderbyId = asynchandler(async (req, res) => {
   try {
@@ -131,9 +132,55 @@ const changeBidPrice = asynchandler(async (req, res) => {
   });
 });
 
+const getallorders = asynchandler(async (req, res) => {
+  try {
+    const orders = await ordermodel.find({});
+    if (!orders) {
+      res.status(400).json({
+        success: false,
+        message: "No orders found"
+      })
+    }
+    res.json({
+      success: true,
+      orders
+    })
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: "Internal server error",
+      message: err.message
+    })
+  }
+})
+
+const getallinstitutes = asynchandler(async (req, res) => {
+  try {
+    const institutes = await institute.find({});
+    if (!institutes) {
+      res.status(400).json({
+        success: false,
+        message: "No institutes found"
+      })
+    }
+    res.json({
+      success: true,
+      institutes
+    })
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: "Internal server error",
+      message: err.message
+    })
+  }
+})
+
 module.exports = {
   getOrderbyId,
   getOrdersbyDepartment,
   getDepartments,
   changeBidPrice,
+  getallorders,
+  getallinstitutes
 };
