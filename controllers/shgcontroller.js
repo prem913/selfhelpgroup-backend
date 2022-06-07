@@ -29,7 +29,7 @@ const registershg = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -64,7 +64,7 @@ const shglogin = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -109,7 +109,7 @@ const verifyOtp = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -165,7 +165,7 @@ const addproducts = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -295,7 +295,7 @@ const bid = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -311,7 +311,7 @@ const getproducts = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -365,7 +365,7 @@ const updateproduct = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -398,7 +398,7 @@ const deleteproduct = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -458,7 +458,7 @@ const getprofile = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -505,7 +505,7 @@ const orderdelivered = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });

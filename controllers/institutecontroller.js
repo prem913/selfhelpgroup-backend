@@ -101,7 +101,7 @@ const registerinstitute = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -209,15 +209,7 @@ const approveorder = asyncHandler(async (req, res) => {
         error: "Bid already approved",
       });
     }
-    order.items.forEach((item) => {
-      shgfind.products.forEach((product) => {
-        products.forEach((product1) => {
-          if (product._id.toString() === product1.productid.toString() && item.itemname === product.shgproduct) {
-            item.approvedquantity = item.approvedquantity + product1.quantity;
-          }
-        });
-      });
-    });
+    var total = 0;
     const check = async () => {
       return new Promise((resolve, reject) => {
         shgfind.products.forEach((product, index2) => {
@@ -226,7 +218,7 @@ const approveorder = asyncHandler(async (req, res) => {
               reject("quantiy is greater than quantity in bid");
             }
             if (product._id.toString() === item.productid.toString()) {
-              console.log("exec")
+              total += item.quantity * product.price;
               selectedproducts.push({
                 shgproduct: product.shgproduct,
                 quantity: item.quantity,
@@ -249,6 +241,16 @@ const approveorder = asyncHandler(async (req, res) => {
     };
     check()
       .then(async () => {
+
+        order.items.forEach((item) => {
+          shgfind.products.forEach((product) => {
+            products.forEach((product1) => {
+              if (product._id.toString() === product1.productid.toString() && item.itemname === product.shgproduct) {
+                item.approvedquantity = item.approvedquantity + product1.quantity;
+              }
+            });
+          });
+        });
         await Order.findByIdAndUpdate(orderid, {
           $push: {
             approvedbid: {
@@ -257,6 +259,7 @@ const approveorder = asyncHandler(async (req, res) => {
               shgcontact: shgfind.shgcontact,
               shglocation: shgfind.shglocation,
               products: selectedproducts,
+              totalamount: total,
             },
           },
         });
@@ -296,7 +299,7 @@ const approveorder = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -362,7 +365,7 @@ const saveorder = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -396,7 +399,7 @@ const getsavedorder = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -429,7 +432,7 @@ const deletesavedorder = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -501,7 +504,7 @@ const verifydelivery = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });

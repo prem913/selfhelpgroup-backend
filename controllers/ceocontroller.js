@@ -23,8 +23,8 @@ const getOrderbyId = asynchandler(async (req, res) => {
   } catch (err) {
     res.status(500).json({
       success: false,
-      message: "Internal server error!",
-      error: err,
+      error: "Internal server error!",
+      message: err.message,
     });
     console.log(err);
   }
@@ -57,8 +57,8 @@ const getOrdersbyDepartment = asynchandler(async (req, res) => {
   } catch (err) {
     res.status(500).json({
       success: false,
-      message: "Internal server error!",
-      error: err,
+      error: "Internal server error!",
+      message: err.message,
     });
     console.log(err);
   }
@@ -89,8 +89,8 @@ const getDepartments = asynchandler(async (req, res) => {
   } catch (err) {
     res.status(500).json({
       success: false,
-      message: "Internal server error!",
-      error: err,
+      error: "Internal server error!",
+      message: err.message,
     });
     console.log(err);
   }
@@ -149,9 +149,9 @@ const getallorders = asynchandler(async (req, res) => {
   } catch (err) {
     res.status(500).json({
       success: false,
-      error: "Internal server error",
-      message: err.message
-    })
+      error: "Internal server error!",
+      message: err.message,
+    });
   }
 })
 
@@ -194,7 +194,7 @@ const getshgdata = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });

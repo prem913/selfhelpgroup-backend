@@ -59,6 +59,10 @@ const shgSchema = new mongoose.Schema(
               type: String,
             },
             products: [],
+            totalamount: {
+              type: Number,
+              default: 0,
+            },
             delivered: {
               type: Boolean,
               default: false,

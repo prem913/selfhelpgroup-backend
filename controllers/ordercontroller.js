@@ -84,7 +84,7 @@ const createorder = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      message: err,
+      message: err.message,
     });
   }
 });
@@ -177,7 +177,7 @@ const modifyorder = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -241,7 +241,7 @@ const getallorders = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -265,7 +265,7 @@ const getorderbydepartment = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -285,7 +285,7 @@ const getorderbyinstitute = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -322,7 +322,7 @@ const deleteorder = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -336,7 +336,7 @@ const getallitems = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -381,7 +381,7 @@ const additems = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -432,7 +432,7 @@ const lockorder = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -484,7 +484,7 @@ const deleteitem = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });

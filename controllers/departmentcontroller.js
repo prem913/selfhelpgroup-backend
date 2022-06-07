@@ -34,32 +34,24 @@ const registerdepartment = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
 
 const logindepartment = asynchandler(async (req, res) => {
   try {
-    const { email, username, password } = req.body;
-    if (!email && !username) {
+    const { email, password } = req.body;
+    if (!email || !password) {
       res.status(400).json({
-        error: "Please provide email or username",
-      });
-    }
-    if (!password) {
-      res.status(400).json({
-        error: "Please provide password",
+        error: "Please provide all details username or email and password",
       });
     }
     var department = await departmentmodel.findOne({ email });
     if (!department) {
-      department = await departmentmodel.findOne({ username });
-    }
-    if (!department) {
-      const institute = await Institute.findOne({ email });
+      var institute = await Institute.findOne({ email });
       if (!institute) {
-        institute = await Institute.findOne({ username });
+        institute = await Institute.findOne({ username: email });
       }
       if (!institute) {
         return res.status(400).json({
@@ -114,7 +106,7 @@ const logindepartment = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -137,7 +129,7 @@ const instituteunderdepartment = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -169,7 +161,7 @@ const profile = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
