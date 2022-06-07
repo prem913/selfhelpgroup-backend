@@ -16,6 +16,11 @@ const ordermodel = mongoose.Schema(
       ref: "Institute",
       required: true,
     },
+    zoneid: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Zone",
+      required: true,
+    },
     institutename: {
       type: String,
       required: true,

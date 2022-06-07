@@ -179,7 +179,7 @@ const getallinstitutes = asynchandler(async (req, res) => {
 
 const getshgdata = asynchandler(async (req, res) => {
   try {
-    if (req.user.department !== "ceo") {
+    if (req.user.usertype !== "ceo") {
       return res.status(400).json({
         error: "You are not authorized to view this data",
       });

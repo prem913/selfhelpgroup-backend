@@ -211,12 +211,6 @@ const bid = asynchandler(async (req, res) => {
           if (!orderproduct) {
             reject("order product not found");
           }
-          const product = req.user.products.find(
-            (product) => product.name === orderproduct.itemname
-          );
-          if (!product) {
-            reject("Please add product first");
-          }
         });
         resolve();
       });

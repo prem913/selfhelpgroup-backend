@@ -41,15 +41,26 @@ const registerdepartment = asynchandler(async (req, res) => {
 
 const logindepartment = asynchandler(async (req, res) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
+    const { email, username, password } = req.body;
+    if (!email && !username) {
       res.status(400).json({
-        error: "Please provide all the details email and password",
+        error: "Please provide email or username",
       });
     }
-    const department = await departmentmodel.findOne({ email });
+    if (!password) {
+      res.status(400).json({
+        error: "Please provide password",
+      });
+    }
+    var department = await departmentmodel.findOne({ email });
+    if (!department) {
+      department = await departmentmodel.findOne({ username });
+    }
     if (!department) {
       const institute = await Institute.findOne({ email });
+      if (!institute) {
+        institute = await Institute.findOne({ username });
+      }
       if (!institute) {
         return res.status(400).json({
           error: "No account registered with this email",

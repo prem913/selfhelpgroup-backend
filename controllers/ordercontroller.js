@@ -47,6 +47,7 @@ const createorder = asyncHandler(async (req, res) => {
         orderdata.departmentid = req.user.departmentid;
         orderdata.department = req.user.department;
         orderdata.institutelocation = req.user.location;
+        orderdata.zoneid = req.user.zoneid;
         orderdata.status = "pending";
         await orderdata.save();
 
@@ -211,7 +212,7 @@ const getallorders = asyncHandler(async (req, res) => {
         orderdata.push(order);
       } else {
         if (
-          order.institutelocation === req.user.location &&
+          JSON.stringify(req.user.zone).includes(JSON.stringify(order.zoneid)) &&
           !JSON.stringify(order.bid).includes(req.user._id)
         ) {
           orderdata.push(order);
