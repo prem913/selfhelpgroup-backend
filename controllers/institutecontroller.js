@@ -209,7 +209,6 @@ const approveorder = asyncHandler(async (req, res) => {
         error: "Bid already approved",
       });
     }
-    var total = 0;
     const check = async () => {
       return new Promise((resolve, reject) => {
         shgfind.products.forEach((product, index2) => {
@@ -218,7 +217,6 @@ const approveorder = asyncHandler(async (req, res) => {
               reject("quantiy is greater than quantity in bid");
             }
             if (product._id.toString() === item.productid.toString()) {
-              total += item.quantity * product.price;
               selectedproducts.push({
                 shgproduct: product.shgproduct,
                 quantity: item.quantity,
@@ -251,6 +249,7 @@ const approveorder = asyncHandler(async (req, res) => {
             });
           });
         });
+
         await Order.findByIdAndUpdate(orderid, {
           $push: {
             approvedbid: {
@@ -259,12 +258,14 @@ const approveorder = asyncHandler(async (req, res) => {
               shgcontact: shgfind.shgcontact,
               shglocation: shgfind.shglocation,
               products: selectedproducts,
-              totalamount: total,
             },
           },
         });
 
         shgfind.status = "approved";
+        const total = selectedproducts.reduce((acc, curr) => {
+          return acc + curr.totalprice;
+        }, 0);
         const shgdata = await shg.findByIdAndUpdate(shgId, {
           $push: {
             orders: {
@@ -273,6 +274,7 @@ const approveorder = asyncHandler(async (req, res) => {
               institutename: order.institutename,
               institutelocation: order.institutelocation,
               products: selectedproducts,
+              totalamount: total,
             },
           },
         });

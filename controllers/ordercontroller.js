@@ -2,6 +2,7 @@ const Order = require("../models/ordermodel");
 const shg = require("../models/shgmodel");
 const asyncHandler = require("express-async-handler");
 const itemsmodel = require("../models/itemsmodel");
+const Zone = require("../models/zonemodel");
 const { sendEmail } = require("../utils/mail");
 const { sendordernotification } = require("../utils/notification");
 const createorder = asyncHandler(async (req, res) => {
@@ -417,12 +418,13 @@ const lockorder = asyncHandler(async (req, res) => {
     //   order.status,
     //   order.department
     // );
-    const shglocation = await shg.find({ location: req.user.location });
-    shglocation.forEach((shg) => {
-      if (shg.devicetoken) {
-        sendordernotification(shg.devicetoken, req.user.name);
+    const zonedata = await Zone.findById(order.zoneid);
+    zonedata.shgs.forEach(async (shgdata) => {
+      const shglocation = await shg.findById(shgdata.shgid);
+      if (shglocation.devicetoken) {
+        sendordernotification(shglocation.devicetoken, req.user.name);
       }
-    });
+    })
     await order.save();
     res.json({
       message: "Order approved for display",

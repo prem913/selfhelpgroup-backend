@@ -222,22 +222,22 @@ const bid = asynchandler(async (req, res) => {
           const orderproduct = order.items.find(
             (product) => product._id.toString() === item.productid
           );
-          const product = shgdata.products.find(
-            (product) => product.name === orderproduct.itemname
-          );
-          if (product.type !== orderproduct.itemtype) {
-            return res.status(400).json({
-              error: "product type does not match with order type",
-            });
-          }
-          if (
-            product.type === "loose" &&
-            product.unit !== orderproduct.itemunit
-          ) {
-            return res.status(400).json({
-              error: "product unit does not match with order unit",
-            });
-          }
+          // const product = shgdata.products.find(
+          //   (product) => product.name === orderproduct.itemname
+          // );
+          // if (product.type !== orderproduct.itemtype) {
+          //   return res.status(400).json({
+          //     error: "product type does not match with order type",
+          //   });
+          // }
+          // if (
+          //   product.type === "loose" &&
+          //   product.unit !== orderproduct.itemunit
+          // ) {
+          //   return res.status(400).json({
+          //     error: "product unit does not match with order unit",
+          //   });
+          // }
           const checkorder = order.bid.find(
             (bid) =>
               toString(bid.shgId) === toString(shgdata._id) &&
@@ -249,22 +249,23 @@ const bid = asynchandler(async (req, res) => {
             });
           }
           productsdata.push({
-            shgproduct: product.name,
+            shgproduct: orderproduct.itemname,
             quantity: item.quantity,
             unitprice: item.unitprice,
             totalprice: item.quantity * item.unitprice,
+            unit: orderproduct.itemunit,
           });
-          if (product.unit) {
-            productsdata[productsdata.length - 1].unit = product.unit;
-          }
-          if (product.manufacturingdate) {
-            productsdata[productsdata.length - 1].manufacturingdate =
-              product.manufacturingdate;
-          }
-          if (product.expirydate) {
-            productsdata[productsdata.length - 1].expirydate =
-              product.expirydate;
-          }
+          // if (product.unit) {
+          //   productsdata[productsdata.length - 1].unit = product.unit;
+          // }
+          // if (product.manufacturingdate) {
+          //   productsdata[productsdata.length - 1].manufacturingdate =
+          //     product.manufacturingdate;
+          // }
+          // if (product.expirydate) {
+          //   productsdata[productsdata.length - 1].expirydate =
+          //     product.expirydate;
+          // }
         });
         // if (quantity > product.quantity) {
         //   return res.status(400).json({
