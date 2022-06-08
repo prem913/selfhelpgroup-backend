@@ -26,6 +26,7 @@ app.use("/department", require("./routes/departmentroute"));
 app.use("/order", require("./routes/orderroute"));
 app.use("/institute", require("./routes/instituteroute"));
 app.use("/ceo", require("./routes/ceoroute"));
+app.use("/zone", require("./routes/zoneroute"));
 //middlewares
 app.use(errorHandler);
 const port = process.env.PORT || 5000;

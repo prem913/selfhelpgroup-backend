@@ -59,7 +59,15 @@ const shgSchema = new mongoose.Schema(
               type: String,
             },
             products: [],
+            totalamount: {
+              type: Number,
+              default: 0,
+            },
             delivered: {
+              type: Boolean,
+              default: false,
+            },
+            deliveryverified: {
               type: Boolean,
               default: false,
             },
@@ -67,6 +75,19 @@ const shgSchema = new mongoose.Schema(
           { timestamps: true }
         ),
       },
+    ],
+    zone: [
+      {
+        zoneid: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Zone",
+          required: true,
+        },
+        zonename: {
+          type: String,
+          required: true,
+        },
+      }
     ],
     otp: String,
     devicetoken: String,

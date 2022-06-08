@@ -10,10 +10,6 @@ const itemsSchema = mongoose.Schema({
     enum: ["packed", "loose"],
     required: true,
   },
-  itemdescription: {
-    type: String,
-    required: true,
-  },
   itemprice: {
     type: Number,
     required: true,

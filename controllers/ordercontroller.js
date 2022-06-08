@@ -2,7 +2,9 @@ const Order = require("../models/ordermodel");
 const shg = require("../models/shgmodel");
 const asyncHandler = require("express-async-handler");
 const itemsmodel = require("../models/itemsmodel");
+const Zone = require("../models/zonemodel");
 const { sendEmail } = require("../utils/mail");
+const { sendordernotification } = require("../utils/notification");
 const createorder = asyncHandler(async (req, res) => {
   try {
     const orderdata = new Order();
@@ -46,11 +48,12 @@ const createorder = asyncHandler(async (req, res) => {
         orderdata.departmentid = req.user.departmentid;
         orderdata.department = req.user.department;
         orderdata.institutelocation = req.user.location;
+        orderdata.zoneid = req.user.zoneid;
         orderdata.status = "pending";
         await orderdata.save();
 
         // orderdata.items = itemdata;
-        await items.forEach(async ({ itemid, itemquantity }) => {
+        await items.forEach(async ({ itemid, itemquantity, itemdescription }) => {
           const item = await itemsmodel.findById(itemid);
           await Order.findByIdAndUpdate(orderdata._id, {
             $push: {
@@ -58,7 +61,7 @@ const createorder = asyncHandler(async (req, res) => {
                 itemid: itemid,
                 itemname: item.itemname,
                 itemtype: item.itemtype,
-                itemdescription: item.itemdescription,
+                itemdescription: itemdescription,
                 itemprice: item.itemprice,
                 itemunit: item.itemunit,
                 itemquantity: itemquantity,
@@ -66,6 +69,7 @@ const createorder = asyncHandler(async (req, res) => {
             },
           });
         });
+
         await req.user.save();
         res.json({
           message: "Order registered successfully",
@@ -81,7 +85,7 @@ const createorder = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -134,7 +138,7 @@ const modifyorder = asyncHandler(async (req, res) => {
       check()
         .then(async () => {
           // orderdata.items = itemdata;
-          await items.forEach(async ({ itemid, itemquantity }) => {
+          await items.forEach(async ({ itemid, itemquantity, itemdescription }) => {
             const item = await itemsmodel.findById(itemid);
             if (!item) {
               return res.status(400).json({
@@ -147,7 +151,7 @@ const modifyorder = asyncHandler(async (req, res) => {
                   itemid: itemid,
                   itemname: item.itemname,
                   itemtype: item.itemtype,
-                  itemdescription: item.itemdescription,
+                  itemdescription: itemdescription,
                   itemprice: item.itemprice,
                   itemunit: item.itemunit,
                   itemquantity: itemquantity,
@@ -174,7 +178,7 @@ const modifyorder = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -193,14 +197,27 @@ const getallorders = asyncHandler(async (req, res) => {
     //   });
     // });
     orders.forEach((order) => {
-      const item = order.items.find((item) => {
-        const product = req.user.products.find((product) => {
-          return product.name === item.itemname;
-        });
-        return product;
-      });
-      if (item && order.institutelocation === req.user.location) {
+      // const item = order.items.find((item) => {
+      //   const product = req.user.products.find((product) => {
+      //     return product.name === item.itemname;
+      //   });
+      //   return product;
+      // });
+      //for adding product based filter add item&&
+
+      const date = new Date();
+      const orderdate = new Date(order.createdAt);
+      const diff = Math.abs(date - orderdate);
+      const diffDays = Math.ceil(diff / (1000 * 3600 * 24));
+      if (diffDays > 2 && !JSON.stringify(order.bid).includes(req.user._id)) {
         orderdata.push(order);
+      } else {
+        if (
+          JSON.stringify(req.user.zone).includes(JSON.stringify(order.zoneid)) &&
+          !JSON.stringify(order.bid).includes(req.user._id)
+        ) {
+          orderdata.push(order);
+        }
       }
     });
     orderdata.sort((a, b) => {
@@ -225,7 +242,7 @@ const getallorders = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -249,7 +266,7 @@ const getorderbydepartment = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -269,7 +286,7 @@ const getorderbyinstitute = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -306,7 +323,7 @@ const deleteorder = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -320,27 +337,28 @@ const getallitems = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
 
 const additems = asyncHandler(async (req, res) => {
   try {
-    const { itemtype, itemdescription, itemunit, itemname, itemprice } =
+    const { itemtype, itemunit, itemname, itemprice } =
       req.body;
+    if (!itemname || !itemtype || !itemprice) {
+      res.status(400).json({
+        message: "provide all details",
+      });
+      return;
+    }
     const itemcheck = await itemsmodel.findOne({ itemname });
     if (itemcheck) {
       return res.status(400).json({
         error: "Item already exists",
       });
     }
-    if (!itemname || !itemdescription || !itemtype || !itemprice) {
-      res.status(400).json({
-        message: "provide all details",
-      });
-      return;
-    }
+
     if (itemtype === "loose" && !itemunit) {
       res.status(400).json({
         message: "provide unit with quantity for loose type products",
@@ -349,7 +367,6 @@ const additems = asyncHandler(async (req, res) => {
     }
     const item = {
       itemtype,
-      itemdescription,
       itemname,
       itemunit,
       itemprice,
@@ -365,7 +382,7 @@ const additems = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -395,12 +412,19 @@ const lockorder = asyncHandler(async (req, res) => {
       });
     }
     order.status = "approved";
-    sendEmail(
-      order.email,
-      order._id.toString(),
-      order.status,
-      order.department
-    );
+    // sendEmail(
+    //   order.email,
+    //   order._id.toString(),
+    //   order.status,
+    //   order.department
+    // );
+    const zonedata = await Zone.findById(order.zoneid);
+    zonedata.shgs.forEach(async (shgdata) => {
+      const shglocation = await shg.findById(shgdata.shgid);
+      if (shglocation.devicetoken) {
+        sendordernotification(shglocation.devicetoken, req.user.name);
+      }
+    })
     await order.save();
     res.json({
       message: "Order approved for display",
@@ -410,7 +434,7 @@ const lockorder = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -462,7 +486,7 @@ const deleteitem = asyncHandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });

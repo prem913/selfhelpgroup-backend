@@ -34,7 +34,7 @@ const registerdepartment = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -44,12 +44,15 @@ const logindepartment = asynchandler(async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
       res.status(400).json({
-        error: "Please provide all the details email and password",
+        error: "Please provide all details username or email and password",
       });
     }
-    const department = await departmentmodel.findOne({ email });
+    var department = await departmentmodel.findOne({ email });
     if (!department) {
-      const institute = await Institute.findOne({ email });
+      var institute = await Institute.findOne({ email });
+      if (!institute) {
+        institute = await Institute.findOne({ username: email });
+      }
       if (!institute) {
         return res.status(400).json({
           error: "No account registered with this email",
@@ -103,7 +106,7 @@ const logindepartment = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -126,32 +129,12 @@ const instituteunderdepartment = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
 
-const getshgdata = asynchandler(async (req, res) => {
-  try {
-    if (req.user.department !== "ceo") {
-      return res.status(400).json({
-        error: "You are not authorized to view this data",
-      });
-    }
-    const shgdata = await shg.find({});
-    res.json({
-      message: "SHG data",
-      data: shgdata,
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      success: false,
-      error: "Internal server error!",
-      error: err,
-    });
-  }
-});
+
 
 const profile = asynchandler(async (req, res) => {
   try {
@@ -178,7 +161,7 @@ const profile = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -186,6 +169,5 @@ module.exports = {
   registerdepartment,
   logindepartment,
   instituteunderdepartment,
-  getshgdata,
   profile,
 };

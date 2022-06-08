@@ -3,14 +3,19 @@ const Order = require("../models/ordermodel");
 const asynchandler = require("express-async-handler");
 const { generateOTP, sendotp } = require("../utils/otp");
 const { createJwtToken } = require("../utils/token");
-
+const ordermodel = require("../models/ordermodel");
 const registershg = asynchandler(async (req, res) => {
   try {
-    console.log(req.body);
     const { name, contact, location } = req.body;
     if (!name || !contact || !location) {
       res.status(400).json({
         error: "Please provide all the details name contact and location",
+      });
+    }
+    const check = await shg.findOne({ contact });
+    if (check) {
+      res.status(400).json({
+        error: "This contact number is already registered",
       });
     }
     const shgdata = req.body;
@@ -24,7 +29,7 @@ const registershg = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -59,7 +64,7 @@ const shglogin = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -104,7 +109,7 @@ const verifyOtp = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -160,7 +165,7 @@ const addproducts = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -171,6 +176,11 @@ const bid = asynchandler(async (req, res) => {
     if (!orderid || !product) {
       return res.status(400).json({
         error: "Please provide product and orderid",
+      });
+    }
+    if (Object.keys(product).length === 0) {
+      return res.status(400).json({
+        error: "Please provide products to bid",
       });
     }
     const order = await Order.findById(orderid);
@@ -191,6 +201,7 @@ const bid = asynchandler(async (req, res) => {
     const check = async () => {
       return new Promise((resolve, reject) => {
         product.forEach((item, index) => {
+
           if (!item.productid || !item.quantity || !item.unitprice) {
             reject("Please provide product name quantity and unitprice");
           }
@@ -200,16 +211,8 @@ const bid = asynchandler(async (req, res) => {
           if (!orderproduct) {
             reject("order product not found");
           }
-          const product = req.user.products.find(
-            (product) => product.name === orderproduct.itemname
-          );
-          if (!product) {
-            reject("Please add product first");
-          }
-          if (index === product.length - 1) {
-            resolve();
-          }
         });
+        resolve();
       });
     };
     check()
@@ -219,22 +222,22 @@ const bid = asynchandler(async (req, res) => {
           const orderproduct = order.items.find(
             (product) => product._id.toString() === item.productid
           );
-          const product = shgdata.products.find(
-            (product) => product.name === orderproduct.itemname
-          );
-          if (product.type !== orderproduct.itemtype) {
-            return res.status(400).json({
-              error: "product type does not match with order type",
-            });
-          }
-          if (
-            product.type === "loose" &&
-            product.unit !== orderproduct.itemunit
-          ) {
-            return res.status(400).json({
-              error: "product unit does not match with order unit",
-            });
-          }
+          // const product = shgdata.products.find(
+          //   (product) => product.name === orderproduct.itemname
+          // );
+          // if (product.type !== orderproduct.itemtype) {
+          //   return res.status(400).json({
+          //     error: "product type does not match with order type",
+          //   });
+          // }
+          // if (
+          //   product.type === "loose" &&
+          //   product.unit !== orderproduct.itemunit
+          // ) {
+          //   return res.status(400).json({
+          //     error: "product unit does not match with order unit",
+          //   });
+          // }
           const checkorder = order.bid.find(
             (bid) =>
               toString(bid.shgId) === toString(shgdata._id) &&
@@ -246,22 +249,23 @@ const bid = asynchandler(async (req, res) => {
             });
           }
           productsdata.push({
-            shgproduct: product.name,
+            shgproduct: orderproduct.itemname,
             quantity: item.quantity,
             unitprice: item.unitprice,
             totalprice: item.quantity * item.unitprice,
+            unit: orderproduct.itemunit,
           });
-          if (product.unit) {
-            productsdata[productsdata.length - 1].unit = product.unit;
-          }
-          if (product.manufacturingdate) {
-            productsdata[productsdata.length - 1].manufacturingdate =
-              product.manufacturingdate;
-          }
-          if (product.expirydate) {
-            productsdata[productsdata.length - 1].expirydate =
-              product.expirydate;
-          }
+          // if (product.unit) {
+          //   productsdata[productsdata.length - 1].unit = product.unit;
+          // }
+          // if (product.manufacturingdate) {
+          //   productsdata[productsdata.length - 1].manufacturingdate =
+          //     product.manufacturingdate;
+          // }
+          // if (product.expirydate) {
+          //   productsdata[productsdata.length - 1].expirydate =
+          //     product.expirydate;
+          // }
         });
         // if (quantity > product.quantity) {
         //   return res.status(400).json({
@@ -292,7 +296,7 @@ const bid = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -308,7 +312,7 @@ const getproducts = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -362,7 +366,7 @@ const updateproduct = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
@@ -395,26 +399,49 @@ const deleteproduct = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
 
 const getapprovedproducts = asynchandler(async (req, res) => {
   try {
-    const shgdata = await shg.findById(req.user._id);
-    shgdata.orders.sort((a, b) => {
+    req.user.orders.sort((a, b) => {
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
+    const filtered = req.user.orders.filter((order) =>
+      order.deliveryverified === false
+    );
     res.status(200).json({
-      products: shgdata.orders,
+      products: filtered,
     });
   } catch (err) {
     console.log(err);
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
+    });
+  }
+});
+
+const getcompletedorders = asynchandler(async (req, res) => {
+  try {
+    req.user.orders.sort((a, b) => {
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+    const filtered = req.user.orders.filter((order) =>
+      order.deliveryverified === true
+    );
+    res.status(200).json({
+      products: filtered,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error!",
+      message: err.message,
     });
   }
 });
@@ -432,10 +459,58 @@ const getprofile = asynchandler(async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Internal server error!",
-      error: err,
+      message: err.message,
     });
   }
 });
+
+const orderdelivered = asynchandler(async (req, res) => {
+  try {
+    const { orderid } = req.body;
+    if (!orderid) {
+      return res.status(400).json({
+        error: "Please provide orderid",
+      });
+    }
+    const shgdata = await shg.findById(req.user._id);
+    const order = shgdata.orders.find(
+      (order) => order._id.toString() === orderid
+    );
+    if (!order) {
+      return res.status(400).json({
+        error: "order not found",
+      });
+    }
+    if (order.delivered) {
+      return res.status(400).json({
+        error: "order already delivered",
+      });
+    }
+    order.delivered = true;
+    const orderfromordermodel = await ordermodel.findById(order.orderid);
+    orderfromordermodel.approvedbid.forEach((bid) => {
+      if (bid.shgId.toString() === shgdata._id.toString()) {
+        if (JSON.stringify(bid.products) === JSON.stringify(order.products)) {
+          bid.delivered = true;
+        }
+      }
+    });
+    await shgdata.save();
+    await orderfromordermodel.save();
+    res.status(200).json({
+      message: "order status updated successfully",
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error!",
+      message: err.message,
+    });
+  }
+});
+
 module.exports = {
   registershg,
   shglogin,
@@ -447,4 +522,6 @@ module.exports = {
   deleteproduct,
   getapprovedproducts,
   getprofile,
+  orderdelivered,
+  getcompletedorders
 };

@@ -4,6 +4,9 @@ const {
   getOrdersbyDepartment,
   getDepartments,
   changeBidPrice,
+  getallorders,
+  getallinstitutes,
+  getshgdata,
 } = require("../controllers/ceocontroller");
 const {
   protectdepartment,
@@ -18,6 +21,8 @@ router.post(
   getOrdersbyDepartment
 );
 router.get("/getdepartments", [protectdepartment, protectceo], getDepartments);
-
-router.post("/changebidprice",changeBidPrice); 
+router.get("/getallorders", protectceo, getallorders);
+router.get("/getallinstitutes", protectceo, getallinstitutes);
+router.get("/getshgdata", protectceo, getshgdata);
+router.post("/changebidprice", changeBidPrice);
 module.exports = router;

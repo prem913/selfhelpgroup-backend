@@ -31,6 +31,18 @@ const institutemodel = mongoose.Schema(
     },
     email: {
       type: String,
+      // required: true,
+    },
+    username: {
+      type: String,
+    },
+    zoneid: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Zone",
+      required: true,
+    },
+    zonename: {
+      type: String,
       required: true,
     },
     password: {
@@ -49,6 +61,18 @@ const institutemodel = mongoose.Schema(
               type: String,
             },
             itemquantity: {
+              type: Number,
+            },
+            itemtype: {
+              type: String,
+            },
+            itemunit: {
+              type: String,
+            },
+            itemdescription: {
+              type: String,
+            },
+            itemprice: {
               type: Number,
             },
           },
