@@ -484,11 +484,48 @@ const verifydelivery = asyncHandler(async (req, res) => {
       shgdata.orders.forEach((order) => {
         if (JSON.stringify(order.products) === JSON.stringify(approvedbid.products)) {
           order.deliveryverified = true;
+          const today = new Date();
+          const month = today.getMonth();
+          if (month === 0) {
+            shgdata.january += order.totalamount;
+          } else if (month === 1) {
+            shgdata.february += order.totalamount;
+          }
+          else if (month === 2) {
+            shgdata.march += order.totalamount;
+          }
+          else if (month === 3) {
+            shgdata.april += order.totalamount;
+          }
+          else if (month === 4) {
+            shgdata.may += order.totalamount;
+          }
+          else if (month === 5) {
+            shgdata.june += order.totalamount;
+          }
+          else if (month === 6) {
+            shgdata.july += order.totalamount;
+          }
+          else if (month === 7) {
+            shgdata.august += order.totalamount;
+          }
+          else if (month === 8) {
+            shgdata.september += order.totalamount;
+          }
+          else if (month === 9) {
+            shgdata.october += order.totalamount;
+          }
+          else if (month === 10) {
+            shgdata.november += order.totalamount;
+          }
+          else if (month === 11) {
+            shgdata.december += order.totalamount;
+          }
         }
       });
-      if (shgdata.devicetoken) {
-        senddeliverynotification(shgdata.devicetoken, req.user.name);
-      }
+      // if (shgdata.devicetoken) {
+      //   senddeliverynotification(shgdata.devicetoken, req.user.name);
+      // }
       await shgdata.save();
       await order.save();
       return res.status(200).json({
