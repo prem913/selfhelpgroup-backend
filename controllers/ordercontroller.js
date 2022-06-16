@@ -421,7 +421,7 @@ const lockorder = asyncHandler(async (req, res) => {
     const zonedata = await Zone.findById(order.zoneid);
     zonedata.shgs.forEach(async (shgdata) => {
       const shglocation = await shg.findById(shgdata.shgid);
-      if (shglocation.devicetoken) {
+      if (shglocation?.devicetoken) {
         sendordernotification(shglocation.devicetoken, req.user.name);
       }
     })
