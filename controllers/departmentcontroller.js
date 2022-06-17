@@ -87,7 +87,8 @@ const logindepartment = asynchandler(async (req, res) => {
           Date.now() + 30 * 24 * 60 * 60 * 1000
         ),
         httpOnly: true,
-        secure: false,
+        secure: true,
+        sameSite: "none",
       });
       return res.json({
         message: "Login successful",
@@ -125,8 +126,9 @@ const logindepartment = asynchandler(async (req, res) => {
         Date.now() + 30 * 24 * 60 * 60 * 1000
       ),
       httpOnly: true,
-      secure: false,
+      secure: true,
       withCredentials: true,
+      sameSite: "none",
     });
     res.json({
       message: "Login successful",
