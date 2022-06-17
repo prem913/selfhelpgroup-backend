@@ -4,6 +4,7 @@ const asynchandler = require("express-async-handler");
 const { generateOTP, sendotp } = require("../utils/otp");
 const { createJwtToken } = require("../utils/token");
 const ordermodel = require("../models/ordermodel");
+const Zone = require("../models/zonemodel");
 const registershg = asynchandler(async (req, res) => {
   try {
     const { name, contact, location } = req.body;
@@ -18,8 +19,17 @@ const registershg = asynchandler(async (req, res) => {
         error: "This contact number is already registered",
       });
     }
+    const zone = await Zone.findOne({ location });
+    if (!zone) {
+      return res.status(400).json({
+        error: "No zone found for this location",
+      });
+    }
     const shgdata = req.body;
+    shgdata.zone = [{ zoneid: zone._id, zonename: zone.zonename }];
     const newshg = new shg(shgdata);
+    zone.shgs.push({ shgid: newshg._id, shgname: newshg.name });
+    await zone.save();
     await newshg.save();
     res.json({
       message: "SHG registered successfully",

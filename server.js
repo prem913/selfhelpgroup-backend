@@ -7,19 +7,34 @@ const cookieParser = require("cookie-parser");
 require("dotenv").config();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+app.use(cors({ credentials: true, origin: ["http://localhost:3000", 'https://online-shg-item-procurement-system.netlify.app/'] }));
 app.use(cookieParser());
 dbconnect();
 app.get("/", (req, res) => {
   res.send("Server Running");
 });
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
+  const allowedOrigins = [
+    'http://127.0.0.1:3000',
+    'http://localhost:3000',
+    'https://online-shg-item-procurement-system.netlify.app/'
+  ];
+  const { origin } = req.headers;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  res.header(
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, PATCH, DELETE, OPTIONS"
   );
-  return next();
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.header('Access-Control-Allow-Credentials', 'true');
+  if ('OPTIONS' == req.method) {
+    res.sendStatus(200);
+  }
+  else {
+    next();
+  }
 });
 //routes
 app.use("/shg", require("./routes/shgroute"));

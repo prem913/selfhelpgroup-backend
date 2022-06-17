@@ -126,6 +126,7 @@ const logindepartment = asynchandler(async (req, res) => {
       ),
       httpOnly: true,
       secure: false,
+      withCredentials: true,
     });
     res.json({
       message: "Login successful",
@@ -225,8 +226,9 @@ const getjwtfromcookie = asynchandler(async (req, res) => {
       res.json({
         message: "Token verified",
         token: token,
-        usertype: department.usertype,
+        userType: department.usertype,
         department: department.department,
+        email: department?.email,
       });
     }
     if (decoded.instituteId) {
@@ -248,10 +250,28 @@ const getjwtfromcookie = asynchandler(async (req, res) => {
       res.json({
         message: "Token verified",
         token: token,
-        usertype: "institute",
+        userType: "institute",
         department: institute.department,
+        email: institute?.email,
       });
     }
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error!",
+      message: err.message,
+    });
+  }
+}
+);
+
+const logout = asynchandler(async (req, res) => {
+  try {
+    res.clearCookie("token");
+    res.json({
+      message: "Logout successful",
+    });
   } catch (err) {
     console.log(err);
     res.status(500).json({
@@ -267,5 +287,6 @@ module.exports = {
   logindepartment,
   instituteunderdepartment,
   profile,
-  getjwtfromcookie
+  getjwtfromcookie,
+  logout,
 };
