@@ -98,6 +98,9 @@ const getDepartments = asynchandler(async (req, res) => {
 
 const changeBidPrice = asynchandler(async (req, res) => {
   const { bidid, products } = req.body;
+  console.log(req.body)
+  console.log(bidid);
+  console.log(products);
   if (!bidid) {
     res.status(400).json({
       success: false,
@@ -120,15 +123,14 @@ const changeBidPrice = asynchandler(async (req, res) => {
   }
   order.bid.forEach((bid) => {
     if (bid._id.equals(bidid)) {
-      // bid.products.forEach((product) => {
-      //   products.forEach((newproduct) => {
-      //     if (product._id.equals(newproduct.productid)) {
-      //       product.unitprice = newproduct.unitprice;
-      //       product.totalprice = product.quantity * newproduct.unitprice;
-      //     }
-      //   });
-      // });
-      bid.products = products;
+      bid.products.forEach((product) => {
+        products.forEach((newproduct) => {
+          if (product._id.equals(newproduct.productid)) {
+            product.unitprice = newproduct.unitprice;
+            product.totalprice = product.quantity * newproduct.unitprice;
+          }
+        });
+      });
     }
   });
 
