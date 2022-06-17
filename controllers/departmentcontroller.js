@@ -73,6 +73,22 @@ const logindepartment = asynchandler(async (req, res) => {
           expiresIn: "30d",
         }
       );
+      const cookietoken = jwt.sign(
+        {
+          instituteId: institute._id,
+        },
+        process.env.COOKIE_SECRET,
+        {
+          expiresIn: "30d",
+        }
+      );
+      res.cookie("token", cookietoken, {
+        expires: new Date(
+          Date.now() + 30 * 24 * 60 * 60 * 1000
+        ),
+        httpOnly: true,
+        secure: false,
+      });
       return res.json({
         message: "Login successful",
         token: token,
@@ -95,6 +111,22 @@ const logindepartment = asynchandler(async (req, res) => {
         expiresIn: "30d",
       }
     );
+    const cookietoken = jwt.sign(
+      {
+        departmentId: department._id,
+      },
+      process.env.COOKIE_SECRET,
+      {
+        expiresIn: "30d",
+      }
+    );
+    res.cookie("token", cookietoken, {
+      expires: new Date(
+        Date.now() + 30 * 24 * 60 * 60 * 1000
+      ),
+      httpOnly: true,
+      secure: false,
+    });
     res.json({
       message: "Login successful",
       token: token,
@@ -165,9 +197,75 @@ const profile = asynchandler(async (req, res) => {
     });
   }
 });
+const getjwtfromcookie = asynchandler(async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(400).json({
+        error: "Please provide token",
+      });
+    }
+    const decoded = jwt.verify(token, process.env.COOKIE_SECRET);
+    if (decoded.departmentId) {
+      const department = await departmentmodel.findById(decoded.departmentId);
+      if (!department) {
+        return res.status(400).json({
+          error: "No account registered with this token",
+        });
+      }
+      const token = jwt.sign(
+        {
+          id: department._id,
+        },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: "30d",
+        }
+      );
+      res.json({
+        message: "Token verified",
+        token: token,
+        usertype: department.usertype,
+        department: department.department,
+      });
+    }
+    if (decoded.instituteId) {
+      const institute = await Institute.findById(decoded.instituteId);
+      if (!institute) {
+        return res.status(400).json({
+          error: "No account registered with this token",
+        });
+      }
+      const token = jwt.sign(
+        {
+          instituteId: institute._id,
+        },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: "30d",
+        }
+      );
+      res.json({
+        message: "Token verified",
+        token: token,
+        usertype: "institute",
+        department: institute.department,
+      });
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error!",
+      message: err.message,
+    });
+  }
+}
+);
 module.exports = {
   registerdepartment,
   logindepartment,
   instituteunderdepartment,
   profile,
+  getjwtfromcookie
 };
