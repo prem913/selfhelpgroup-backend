@@ -98,9 +98,6 @@ const getDepartments = asynchandler(async (req, res) => {
 
 const changeBidPrice = asynchandler(async (req, res) => {
   const { bidid, products } = req.body;
-  console.log(req.body)
-  console.log(bidid);
-  console.log(products);
   if (!bidid) {
     res.status(400).json({
       success: false,
