@@ -98,12 +98,17 @@ const getDepartments = asynchandler(async (req, res) => {
 
 const changeBidPrice = asynchandler(async (req, res) => {
   const { bidid, products } = req.body;
-  if (!bidid || !products) {
+  if (!bidid) {
     res.status(400).json({
       success: false,
       message: "please provide all details",
     });
     return;
+  }
+  if (Object.keys(products).length === 0) {
+    return res.status(400).json({
+      error: "Please provide products to update",
+    });
   }
   const order = await ordermodel.findOne({ "bid._id": bidid });
   if (!order) {
@@ -115,14 +120,15 @@ const changeBidPrice = asynchandler(async (req, res) => {
   }
   order.bid.forEach((bid) => {
     if (bid._id.equals(bidid)) {
-      bid.products.forEach((product) => {
-        products.forEach((newproduct) => {
-          if (product._id.equals(newproduct.productid)) {
-            product.unitprice = newproduct.unitprice;
-            product.totalprice = product.quantity * newproduct.unitprice;
-          }
-        });
-      });
+      // bid.products.forEach((product) => {
+      //   products.forEach((newproduct) => {
+      //     if (product._id.equals(newproduct.productid)) {
+      //       product.unitprice = newproduct.unitprice;
+      //       product.totalprice = product.quantity * newproduct.unitprice;
+      //     }
+      //   });
+      // });
+      bid.products = products;
     }
   });
 
