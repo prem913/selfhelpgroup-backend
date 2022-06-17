@@ -270,7 +270,9 @@ const getjwtfromcookie = asynchandler(async (req, res) => {
 
 const logout = asynchandler(async (req, res) => {
   try {
-    res.clearCookie("token");
+    res.clearCookie("token", {
+      sameSite: "none",
+    });
     res.json({
       message: "Logout successful",
     });
