@@ -3,11 +3,12 @@ const app = express();
 const dbconnect = require("./config/db");
 const cors = require("cors");
 const { errorHandler } = require("./middleware/errorMiddleware");
-
+const cookieParser = require("cookie-parser");
 require("dotenv").config();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
+app.use(cookieParser());
 dbconnect();
 app.get("/", (req, res) => {
   res.send("Server Running");
