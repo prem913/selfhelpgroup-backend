@@ -317,16 +317,9 @@ const saveorder = asyncHandler(async (req, res) => {
     const check = async () => {
       return new Promise((resolve, reject) => {
         items.forEach(async (item, index) => {
-          if (!item.itemid || !item.itemquantity) {
-            reject("Please provide all the details itemid and quantity");
+          if (!item.itemid || !item.itemquantity || !item.itemname || !item.itemtype || item.itemunit) {
+            reject("Please provide all the details itemid and quantity name type and unit");
           }
-          req.user.savedorders.forEach((savedorder, index2) => {
-            if (savedorder.itemid.toString() === item.itemid.toString()) {
-              req.user.savedorders[index2].quantity = item.itemquantity;
-              req.user.savedorders[index2].description = item.description;
-              items.splice(index, 1);
-            }
-          });
           if (index === items.length - 1) {
             resolve();
           }
@@ -335,6 +328,7 @@ const saveorder = asyncHandler(async (req, res) => {
     };
     check()
       .then(async () => {
+        req.user.savedorders = [];
         items.forEach(async (item) => {
           req.user.savedorders.push({
             itemid: item.itemid,
