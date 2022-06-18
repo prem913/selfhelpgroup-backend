@@ -320,31 +320,13 @@ const saveorder = asyncHandler(async (req, res) => {
           if (!item.itemid || !item.itemquantity) {
             reject("Please provide all the details itemid and quantity");
           }
-          let alreadypresent = false;
           req.user.savedorders.forEach((savedorder, index2) => {
             if (savedorder.itemid.toString() === item.itemid.toString()) {
               req.user.savedorders[index2].quantity = item.itemquantity;
               req.user.savedorders[index2].description = item.description;
               items.splice(index, 1);
-              alreadypresent = true;
             }
           });
-          if (!alreadypresent) {
-            await itemsmodel.findById(item.itemid, (err, data) => {
-              if (err) {
-                reject(err);
-              } else {
-                item.itemname = data.itemname;
-                item.itemtype = data.itemtype;
-                item.itemunit = data.itemunit;
-                item.itemprice = data.itemprice;
-              }
-            }
-            );
-            if (!itemdata) {
-              reject("Item not found");
-            }
-          }
           if (index === items.length - 1) {
             resolve();
           }
@@ -361,7 +343,6 @@ const saveorder = asyncHandler(async (req, res) => {
             itemtype: item.itemtype,
             itemunit: item.itemunit,
             itemdescription: item.itemdescription,
-            itemprice: item.itemprice,
           });
         });
         await req.user.save();
