@@ -317,7 +317,7 @@ const saveorder = asyncHandler(async (req, res) => {
     const check = async () => {
       return new Promise((resolve, reject) => {
         items.forEach(async (item, index) => {
-          if (!item.itemid || !item.itemquantity || !item.itemname || !item.itemtype || item.itemunit) {
+          if (!item.itemid || !item.itemquantity || !item.itemname || !item.itemtype || !item.itemunit) {
             reject("Please provide all the details itemid and quantity name type and unit");
           }
           if (index === items.length - 1) {
