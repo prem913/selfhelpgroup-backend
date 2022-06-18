@@ -323,8 +323,8 @@ const saveorder = asyncHandler(async (req, res) => {
           let alreadypresent = false;
           req.user.savedorders.forEach((savedorder, index2) => {
             if (savedorder.itemid.toString() === item.itemid.toString()) {
-              savedorder[index2].quantity = item.itemquantity;
-              savedorder[index2].description = item.description;
+              req.user.savedorders[index2].quantity = item.itemquantity;
+              req.user.savedorders[index2].description = item.description;
               items.splice(index, 1);
               alreadypresent = true;
             }
