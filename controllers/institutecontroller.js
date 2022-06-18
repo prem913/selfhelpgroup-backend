@@ -330,11 +330,17 @@ const saveorder = asyncHandler(async (req, res) => {
             }
           });
           if (!alreadypresent) {
-            const itemdata = await itemsmodel.findById(item.itemid);
-            item.itemname = itemdata.itemname;
-            item.itemtype = itemdata.itemtype;
-            item.itemunit = itemdata.itemunit;
-            item.itemprice = itemdata.itemprice;
+            await itemsmodel.findById(item.itemid, (err, data) => {
+              if (err) {
+                reject(err);
+              } else {
+                item.itemname = data.itemname;
+                item.itemtype = data.itemtype;
+                item.itemunit = data.itemunit;
+                item.itemprice = data.itemprice;
+              }
+            }
+            );
             if (!itemdata) {
               reject("Item not found");
             }
