@@ -72,9 +72,6 @@ const institutemodel = mongoose.Schema(
             itemdescription: {
               type: String,
             },
-            itemprice: {
-              type: Number,
-            },
           },
           { _id: false }
         ),
