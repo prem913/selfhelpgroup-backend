@@ -320,18 +320,24 @@ const saveorder = asyncHandler(async (req, res) => {
           if (!item.itemid || !item.itemquantity) {
             reject("Please provide all the details itemid and quantity");
           }
-          req.user.savedorders.forEach((savedorder) => {
+          let alreadypresent = false;
+          req.user.savedorders.forEach((savedorder, index2) => {
             if (savedorder.itemid.toString() === item.itemid.toString()) {
-              reject("Item already saved");
+              savedorder[index2].quantity = item.itemquantity;
+              savedorder[index2].description = item.description;
+              items.splice(index, 1);
+              alreadypresent = true;
             }
           });
-          const itemdata = await itemsmodel.findById(item.itemid);
-          item.itemname = itemdata.itemname;
-          item.itemtype = itemdata.itemtype;
-          item.itemunit = itemdata.itemunit;
-          item.itemprice = itemdata.itemprice;
-          if (!itemdata) {
-            reject("Item not found");
+          if (!alreadypresent) {
+            const itemdata = await itemsmodel.findById(item.itemid);
+            item.itemname = itemdata.itemname;
+            item.itemtype = itemdata.itemtype;
+            item.itemunit = itemdata.itemunit;
+            item.itemprice = itemdata.itemprice;
+            if (!itemdata) {
+              reject("Item not found");
+            }
           }
           if (index === items.length - 1) {
             resolve();
