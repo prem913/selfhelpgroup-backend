@@ -7,7 +7,7 @@ const cookieParser = require("cookie-parser");
 require("dotenv").config();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({ credentials: true, origin: ["http://localhost:3000", 'https://online-shg-item-procurement-system.netlify.app/'] }));
+app.use(cors({ credentials: true, origin: ["http://localhost:3000", 'https://online-shg-item-procurement-system.netlify.app'] }));
 app.use(cookieParser());
 dbconnect();
 app.get("/", (req, res) => {
@@ -17,7 +17,7 @@ app.use((req, res, next) => {
   const allowedOrigins = [
     'http://127.0.0.1:3000',
     'http://localhost:3000',
-    'https://online-shg-item-procurement-system.netlify.app/'
+    'https://online-shg-item-procurement-system.netlify.app'
   ];
   const { origin } = req.headers;
   if (allowedOrigins.includes(origin)) {
