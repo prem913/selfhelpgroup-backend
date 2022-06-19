@@ -213,7 +213,16 @@ const approveorder = asyncHandler(async (req, res) => {
       return new Promise((resolve, reject) => {
         shgfind.products.forEach((product, index2) => {
           products.forEach((item, index) => {
-            if (product._id.toString() === item.productid.toString() && item.quantity >= product.quantity) {
+            const orderitem = order.items.find(
+              (order) => order.itemname === product.shgproduct
+            );
+            if (!orderitem) {
+              reject("Item not found in order");
+            }
+            if (orderitem.approvedquantity + product.quantity > orderitem.itemquantity) {
+              reject("Quantity exceeded");
+            }
+            if (product._id.toString() === item.productid.toString() && item.quantity > product.quantity) {
               reject("quantiy is greater than quantity in bid");
             }
             if (product._id.toString() === item.productid.toString()) {
@@ -276,6 +285,17 @@ const approveorder = asyncHandler(async (req, res) => {
             },
           },
         });
+        let completed = false;
+        order.items.forEach((item) => {
+          if (item.approvedquantity === item.itemquantity) {
+            completed = true;
+          } else {
+            completed = false;
+          }
+        });
+        if (completed) {
+          order.status = "completed";
+        }
         await order.save();
         await shgdata.save();
         const shgfromshgmodel = await shg.findById(shgId);
@@ -513,9 +533,9 @@ const verifydelivery = asyncHandler(async (req, res) => {
           }
         }
       });
-      // if (shgdata.devicetoken) {
-      //   senddeliverynotification(shgdata.devicetoken, req.user.name);
-      // }
+      if (shgdata.devicetoken) {
+        senddeliverynotification(shgdata.devicetoken, req.user.name);
+      }
 
       await shgdata.save();
       await order.save();
