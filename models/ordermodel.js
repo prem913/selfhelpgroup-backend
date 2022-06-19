@@ -130,6 +130,14 @@ const ordermodel = mongoose.Schema(
             unit: {
               type: String,
             },
+            delivered: {
+              type: Boolean,
+              default: false,
+            },
+            deliveryverified: {
+              type: Boolean,
+              default: false,
+            },
             status: {
               type: String,
               enum: ["pending", "approved", "cancelled", "completed"],
