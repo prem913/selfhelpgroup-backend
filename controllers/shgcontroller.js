@@ -218,7 +218,7 @@ const bid = asynchandler(async (req, res) => {
           const orderproduct = order.items.find(
             (product) => product._id.toString() === item.productid
           );
-          if (orderproduct.quantity < item.quantity) {
+          if (orderproduct.itemquantity < item.quantity) {
             reject("Please Select quantity less than or equal to order quantity");
           }
           if (!orderproduct) {
