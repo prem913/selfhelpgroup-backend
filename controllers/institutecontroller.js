@@ -219,7 +219,7 @@ const approveorder = asyncHandler(async (req, res) => {
             if (!orderitem) {
               reject("Item not found in order");
             }
-            if (orderitem.approvedquantity + product.quantity > orderitem.itemquantity) {
+            if (orderitem.approvedquantity + item.quantity > orderitem.itemquantity) {
               reject("Quantity exceeded");
             }
             if (product._id.toString() === item.productid.toString() && item.quantity > product.quantity) {
