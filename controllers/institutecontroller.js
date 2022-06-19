@@ -447,7 +447,7 @@ const verifydelivery = asyncHandler(async (req, res) => {
     }
     const findbid = () => {
       return new Promise((resolve, reject) => {
-        order.approvedbid.map((approvedbid) => {
+        order.bid.map((approvedbid) => {
           if (approvedbid._id.toString() === approvedbidid.toString()) {
             resolve(approvedbid);
           }
@@ -513,6 +513,13 @@ const verifydelivery = asyncHandler(async (req, res) => {
       // if (shgdata.devicetoken) {
       //   senddeliverynotification(shgdata.devicetoken, req.user.name);
       // }
+      order.approvedbid.forEach((bid) => {
+        if (bid.shgId.toString() === approvedbid.shgId.toString()) {
+          if (JSON.stringify(bid.products) === JSON.stringify(approvedbid.products)) {
+            bid.delivered = true;
+          }
+        }
+      });
       await shgdata.save();
       await order.save();
       return res.status(200).json({
