@@ -227,8 +227,6 @@ const approveorder = asyncHandler(async (req, res) => {
             }
             if (index === products.length - 1 && index2 === shgfind.products.length - 1) {
               if (selectedproducts.length !== products.length) {
-                console.log(selectedproducts);
-                console.log(products);
                 reject("Product is not present in order");
               }
               resolve();
@@ -467,9 +465,14 @@ const verifydelivery = asyncHandler(async (req, res) => {
         });
       }
       approvedbid.deliveryverified = true;
+      order.approvedbid.forEach((bid) => {
+        if (bid.shgId.toString() === approvedbid.shgId.toString()) {
+          bid.deliveryverified = true;
+        }
+      });
       const shgdata = await shg.findById(approvedbid.shgId);
       shgdata.orders.forEach((order) => {
-        if (JSON.stringify(order.products) === JSON.stringify(approvedbid.products)) {
+        if (order.orderid.toString() === orderid.toString()) {
           order.deliveryverified = true;
           const today = new Date();
           const month = today.getMonth();
@@ -513,13 +516,7 @@ const verifydelivery = asyncHandler(async (req, res) => {
       // if (shgdata.devicetoken) {
       //   senddeliverynotification(shgdata.devicetoken, req.user.name);
       // }
-      order.approvedbid.forEach((bid) => {
-        if (bid.shgId.toString() === approvedbid.shgId.toString()) {
-          if (JSON.stringify(bid.products) === JSON.stringify(approvedbid.products)) {
-            bid.delivered = true;
-          }
-        }
-      });
+
       await shgdata.save();
       await order.save();
       return res.status(200).json({

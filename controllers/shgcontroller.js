@@ -485,8 +485,7 @@ const orderdelivered = asynchandler(async (req, res) => {
         error: "Please provide orderid",
       });
     }
-    const shgdata = await shg.findById(req.user._id);
-    const order = shgdata.orders.find(
+    const order = req.user.orders.find(
       (order) => order._id.toString() === orderid
     );
     if (!order) {
@@ -502,20 +501,18 @@ const orderdelivered = asynchandler(async (req, res) => {
     order.delivered = true;
     const orderfromordermodel = await ordermodel.findById(order.orderid);
     orderfromordermodel.approvedbid.forEach((bid) => {
-      if (bid.shgId.toString() === shgdata._id.toString()) {
+      if (bid.shgId.toString() === req.user._id.toString()) {
         if (JSON.stringify(bid.products) === JSON.stringify(order.products)) {
           bid.delivered = true;
         }
       }
     });
     orderfromordermodel.bid.forEach((bid) => {
-      if (bid.shgId.toString() === shgdata._id.toString()) {
-        if (JSON.stringify(bid.products) === JSON.stringify(order.products)) {
-          bid.delivered = true;
-        }
+      if (bid.shgId.toString() === req.user._id.toString()) {
+        bid.delivered = true;
       }
     });
-    await shgdata.save();
+    await req.user.save();
     await orderfromordermodel.save();
     res.status(200).json({
       message: "order status updated successfully",
