@@ -251,16 +251,16 @@ const bid = asynchandler(async (req, res) => {
           //     error: "product unit does not match with order unit",
           //   });
           // }
-          const checkorder = order.bid.find(
-            (bid) =>
-              toString(bid.shgId) === toString(shgdata._id) &&
-              bid.shgproduct === product.name
-          );
-          if (checkorder) {
-            return res.status(400).json({
-              error: "you have already added product for this order",
-            });
-          }
+          // const checkorder = order.bid.find(
+          //   (bid) =>
+          //     toString(bid.shgId) === toString(shgdata._id) &&
+          //     bid.shgproduct === product.name
+          // );
+          // if (checkorder) {
+          //   return res.status(400).json({
+          //     error: "you have already added product for this order",
+          //   });
+          // }
           productsdata.push({
             shgproduct: orderproduct.itemname,
             quantity: item.quantity,
