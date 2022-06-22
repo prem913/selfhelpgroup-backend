@@ -411,6 +411,11 @@ const lockorder = asyncHandler(async (req, res) => {
         error: "Order already approved",
       });
     }
+    if (order.status === "completed") {
+      return res.status(400).json({
+        error: "Order already delivered",
+      });
+    }
     order.status = "approved";
     // sendEmail(
     //   order.email,

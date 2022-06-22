@@ -19,7 +19,7 @@ const registershg = asynchandler(async (req, res) => {
         error: "This contact number is already registered",
       });
     }
-    const zone = await Zone.findOne({ location });
+    const zone = await Zone.findOne({ zonename: location });
     if (!zone) {
       return res.status(400).json({
         error: "No zone found for this location",
