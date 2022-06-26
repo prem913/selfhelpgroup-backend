@@ -501,42 +501,53 @@ const verifydelivery = asyncHandler(async (req, res) => {
           const month = today.getMonth();
           if (month === 0) {
             shgdata.january += order.totalamount;
+            shgdata.totalrevenue += order.totalamount;
           } else if (month === 1) {
             shgdata.february += order.totalamount;
+            shgdata.totalrevenue += order.totalamount;
           }
           else if (month === 2) {
             shgdata.march += order.totalamount;
+            shgdata.totalrevenue += order.totalamount;
           }
           else if (month === 3) {
             shgdata.april += order.totalamount;
+            shgdata.totalrevenue += order.totalamount;
           }
           else if (month === 4) {
             shgdata.may += order.totalamount;
+            shgdata.totalrevenue += order.totalamount;
           }
           else if (month === 5) {
             shgdata.june += order.totalamount;
+            shgdata.totalrevenue += order.totalamount;
           }
           else if (month === 6) {
             shgdata.july += order.totalamount;
+            shgdata.totalrevenue += order.totalamount;
           }
           else if (month === 7) {
             shgdata.august += order.totalamount;
+            shgdata.totalrevenue += order.totalamount;
           }
           else if (month === 8) {
             shgdata.september += order.totalamount;
+            shgdata.totalrevenue += order.totalamount;
           }
           else if (month === 9) {
             shgdata.october += order.totalamount;
+            shgdata.totalrevenue += order.totalamount;
           }
           else if (month === 10) {
             shgdata.november += order.totalamount;
+            shgdata.totalrevenue += order.totalamount;
           }
           else if (month === 11) {
             shgdata.december += order.totalamount;
+            shgdata.totalrevenue += order.totalamount;
           }
         }
       });
-      shgdata.totalrevenue += order.totalamount;
       if (shgdata.devicetoken) {
         senddeliverynotification(shgdata.devicetoken, req.user.name);
       }
