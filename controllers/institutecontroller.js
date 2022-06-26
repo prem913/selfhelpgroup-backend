@@ -222,7 +222,7 @@ const approveorder = asyncHandler(async (req, res) => {
             if (item.quantity === 0) {
               reject("Quantity cannot be 0");
             }
-            if (orderitem.approvedquantity + item.quantity > orderitem.itemquantity) {
+            if (product._id.toString() === item.productid.toString() && orderitem.approvedquantity + item.quantity > orderitem.itemquantity) {
               reject("Quantity exceeded");
             }
             if (product._id.toString() === item.productid.toString() && item.quantity > product.quantity) {
@@ -536,6 +536,7 @@ const verifydelivery = asyncHandler(async (req, res) => {
           }
         }
       });
+      shgdata.totalrevenue += order.totalamount;
       if (shgdata.devicetoken) {
         senddeliverynotification(shgdata.devicetoken, req.user.name);
       }
