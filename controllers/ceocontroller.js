@@ -122,7 +122,7 @@ const changeBidPrice = asynchandler(async (req, res) => {
       }
       )
     }
-    check().then(() => {
+    check().then(async () => {
       const order = await ordermodel.findOne({ "bid._id": bidid });
       if (!order) {
         res.status(400).json({
