@@ -198,31 +198,30 @@ const getallorders = asyncHandler(async (req, res) => {
     //   });
     // });
     //code for zones
-    // orders.forEach((order) => {
-    // const item = order.items.find((item) => {
-    //   const product = req.user.products.find((product) => {
-    //     return product.name === item.itemname;
-    //   });
-    //   return product;
-    // });
-    //for adding product based filter add item&&
-
-    //   const date = new Date();
-    //   const orderdate = new Date(order.createdAt);
-    //   const diff = Math.abs(date - orderdate);
-    //   const diffDays = Math.ceil(diff / (1000 * 3600 * 24));
-    //   if (diffDays > 2 && !JSON.stringify(order.bid).includes(req.user._id)) {
-    //     orderdata.push(order);
-    //   } else {
-    //     if (
-    //       JSON.stringify(req.user.zone).includes(JSON.stringify(order.zoneid)) &&
-    //       !JSON.stringify(order.bid).includes(req.user._id)
-    //     ) {
-    //       orderdata.push(order);
-    //     }
-    //   }
-    // });
-    orders.sort((a, b) => {
+    orders.forEach((order) => {
+      // const item = order.items.find((item) => {
+      //   const product = req.user.products.find((product) => {
+      //     return product.name === item.itemname;
+      //   });
+      //   return product;
+      // });
+      // for adding product based filter add item
+      const date = new Date();
+      const orderdate = new Date(order.createdAt);
+      const diff = Math.abs(date - orderdate);
+      const diffDays = Math.ceil(diff / (1000 * 3600 * 24));
+      if (diffDays > 2 && !JSON.stringify(order.bid).includes(req.user._id)) {
+        orderdata.push(order);
+      } else {
+        if (
+          // JSON.stringify(req.user.zone).includes(JSON.stringify(order.zoneid)) &&
+          !JSON.stringify(order.bid).includes(req.user._id)
+        ) {
+          orderdata.push(order);
+        }
+      }
+    });
+    orderdata.sort((a, b) => {
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
     // req.user.products.forEach((product) => {
@@ -237,7 +236,7 @@ const getallorders = asyncHandler(async (req, res) => {
     // });
     res.json({
       message: "Orders fetched successfully",
-      orders: orders,
+      orders: orderdata,
     });
   } catch (err) {
     console.log(err);
