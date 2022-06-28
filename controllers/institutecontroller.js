@@ -222,6 +222,9 @@ const approveorder = asyncHandler(async (req, res) => {
             if (item.quantity === 0) {
               reject("Quantity cannot be 0");
             }
+            if (item.quantity < 0) {
+              reject("Quantity cannot be negative");
+            }
             if (product._id.toString() === item.productid.toString() && orderitem.approvedquantity + item.quantity > orderitem.itemquantity) {
               reject("Quantity exceeded");
             }

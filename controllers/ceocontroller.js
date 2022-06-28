@@ -97,45 +97,72 @@ const getDepartments = asynchandler(async (req, res) => {
 });
 
 const changeBidPrice = asynchandler(async (req, res) => {
-  const { bidid, products } = req.body;
-  if (!bidid) {
-    res.status(400).json({
-      success: false,
-      message: "please provide all details",
-    });
-    return;
-  }
-  if (Object.keys(products).length === 0) {
-    return res.status(400).json({
-      error: "Please provide products to update",
-    });
-  }
-  const order = await ordermodel.findOne({ "bid._id": bidid });
-  if (!order) {
-    res.status(400).json({
-      success: false,
-      message: "No bid is found with the given bidid",
-    });
-    return;
-  }
-  order.bid.forEach((bid) => {
-    if (bid._id.equals(bidid)) {
-      bid.products.forEach((product) => {
-        products.forEach((newproduct) => {
-          if (product._id.equals(newproduct.productid)) {
-            product.unitprice = newproduct.unitprice;
-            product.totalprice = product.quantity * newproduct.unitprice;
-          }
-        });
+  try {
+    const { bidid, products } = req.body;
+    if (!bidid) {
+      res.status(400).json({
+        success: false,
+        message: "please provide all details",
+      });
+      return;
+    }
+    if (Object.keys(products).length === 0) {
+      return res.status(400).json({
+        error: "Please provide products to update",
       });
     }
-  });
+    const check = () => {
+      return new Promise((resolve, reject) => {
+        products.forEach((newproduct) => {
+          if (newproduct.unitprice <= 0) {
+            reject("Invalid unit price");
+          }
+        });
+        resolve();
+      }
+      )
+    }
+    check().then(() => {
+      const order = await ordermodel.findOne({ "bid._id": bidid });
+      if (!order) {
+        res.status(400).json({
+          success: false,
+          message: "No bid is found with the given bidid",
+        });
+        return;
+      }
+      order.bid.forEach((bid) => {
+        if (bid._id.equals(bidid)) {
+          bid.products.forEach((product) => {
+            products.forEach((newproduct) => {
+              if (product._id.equals(newproduct.productid)) {
+                product.unitprice = newproduct.unitprice;
+                product.totalprice = product.quantity * newproduct.unitprice;
+              }
+            });
+          });
+        }
+      });
 
-  await order.save();
-  res.json({
-    success: true,
-    order,
-  });
+      await order.save();
+      res.json({
+        success: true,
+        order,
+      });
+    }).catch((err) => {
+      res.status(400).json({
+        success: false,
+        message: err,
+      });
+    })
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: "Internal server error!",
+      message: err.message,
+    });
+    console.log(err);
+  }
 });
 
 const getallorders = asynchandler(async (req, res) => {
