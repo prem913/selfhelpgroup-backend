@@ -55,6 +55,9 @@ const shgSchema = new mongoose.Schema(
             institutelocation: {
               type: String,
             },
+            institutecontact: {
+              type: String,
+            },
             department: {
               type: String,
             },

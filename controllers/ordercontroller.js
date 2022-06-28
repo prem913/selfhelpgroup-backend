@@ -47,6 +47,7 @@ const createorder = asyncHandler(async (req, res) => {
         orderdata.instituteid = req.user._id;
         orderdata.departmentid = req.user.departmentid;
         orderdata.department = req.user.department;
+        orderdata.institutecontact = req.user.contact;
         orderdata.institutelocation = req.user.location;
         orderdata.zoneid = req.user.zoneid;
         orderdata.status = "pending";
@@ -196,31 +197,32 @@ const getallorders = asyncHandler(async (req, res) => {
     //     }
     //   });
     // });
-    orders.forEach((order) => {
-      // const item = order.items.find((item) => {
-      //   const product = req.user.products.find((product) => {
-      //     return product.name === item.itemname;
-      //   });
-      //   return product;
-      // });
-      //for adding product based filter add item&&
+    //code for zones
+    // orders.forEach((order) => {
+    // const item = order.items.find((item) => {
+    //   const product = req.user.products.find((product) => {
+    //     return product.name === item.itemname;
+    //   });
+    //   return product;
+    // });
+    //for adding product based filter add item&&
 
-      const date = new Date();
-      const orderdate = new Date(order.createdAt);
-      const diff = Math.abs(date - orderdate);
-      const diffDays = Math.ceil(diff / (1000 * 3600 * 24));
-      if (diffDays > 2 && !JSON.stringify(order.bid).includes(req.user._id)) {
-        orderdata.push(order);
-      } else {
-        if (
-          JSON.stringify(req.user.zone).includes(JSON.stringify(order.zoneid)) &&
-          !JSON.stringify(order.bid).includes(req.user._id)
-        ) {
-          orderdata.push(order);
-        }
-      }
-    });
-    orderdata.sort((a, b) => {
+    //   const date = new Date();
+    //   const orderdate = new Date(order.createdAt);
+    //   const diff = Math.abs(date - orderdate);
+    //   const diffDays = Math.ceil(diff / (1000 * 3600 * 24));
+    //   if (diffDays > 2 && !JSON.stringify(order.bid).includes(req.user._id)) {
+    //     orderdata.push(order);
+    //   } else {
+    //     if (
+    //       JSON.stringify(req.user.zone).includes(JSON.stringify(order.zoneid)) &&
+    //       !JSON.stringify(order.bid).includes(req.user._id)
+    //     ) {
+    //       orderdata.push(order);
+    //     }
+    //   }
+    // });
+    orders.sort((a, b) => {
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
     // req.user.products.forEach((product) => {
@@ -235,7 +237,7 @@ const getallorders = asyncHandler(async (req, res) => {
     // });
     res.json({
       message: "Orders fetched successfully",
-      orders: orderdata,
+      orders: orders,
     });
   } catch (err) {
     console.log(err);
@@ -423,13 +425,21 @@ const lockorder = asyncHandler(async (req, res) => {
     //   order.status,
     //   order.department
     // );
-    const zonedata = await Zone.findById(order.zoneid);
-    zonedata.shgs.forEach(async (shgdata) => {
-      const shglocation = await shg.findById(shgdata.shgid);
-      if (shglocation?.devicetoken) {
-        sendordernotification(shglocation.devicetoken, req.user.name);
+    //code for zone
+    // const zonedata = await Zone.findById(order.zoneid);
+    // zonedata.shgs.forEach(async (shgdata) => {
+    //   const shglocation = await shg.findById(shgdata.shgid);
+    //   if (shglocation?.devicetoken) {
+    //     sendordernotification(shglocation.devicetoken, req.user.name);
+    //   }
+    // })
+    const allshg = await shg.find({});
+    allshg.forEach((shgdata) => {
+      if (shgdata.devicetoken) {
+        sendordernotification(shgdata.devicetoken, req.user.name);
       }
-    })
+    }
+    );
     await order.save();
     res.json({
       message: "Order approved for display",
