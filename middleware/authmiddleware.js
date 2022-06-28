@@ -108,11 +108,44 @@ const combinedprotector = asyncHandler(async (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       //Get user from token
       req.institute = await Institute.findById(decoded.instituteId).select(
+        "-password"
+      );
+      req.department = await departmentmodel
+        .findById(decoded.id).select("-password");
+      if (!req.institute && !req.department) {
+        res.status(401);
+        throw new Error("Not Authorized");
+      }
+      next();
+    } catch (error) {
+      console.log(error);
+      res.status(401);
+      throw new Error("Not Authorized");
+    }
+  }
+  if (!token) {
+    res.status(401);
+    throw new Error("Not Authorized, No Token");
+  }
+});
+
+const combinedprotectorwithpass = asyncHandler(async (req, res, next) => {
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    try {
+      //Get Token from header
+      token = req.headers.authorization.split(" ")[1];
+      //Verify Token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      //Get user from token
+      req.institute = await Institute.findById(decoded.instituteId).select(
         "-otp"
       );
       req.department = await departmentmodel
         .findById(decoded.id)
-        .select("-password");
       if (!req.institute && !req.department) {
         res.status(401);
         throw new Error("Not Authorized");
@@ -169,5 +202,6 @@ module.exports = {
   protectshg,
   protectinstitute,
   combinedprotector,
+  combinedprotectorwithpass,
   protectceo
 };
