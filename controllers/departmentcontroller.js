@@ -5,6 +5,7 @@ const Institute = require("../models/institutemodel");
 const shg = require("../models/shgmodel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const asyncHandler = require("express-async-handler");
 const registerdepartment = asynchandler(async (req, res) => {
   try {
     const { department, contact, email, password } = req.body;
@@ -47,6 +48,8 @@ const logindepartment = asynchandler(async (req, res) => {
         error: "Please provide all details username or email and password",
       });
     }
+    //decode base64
+    const decoded = Buffer.from(password, "base64").toString("ascii");
     var department = await departmentmodel.findOne({ email });
     if (!department) {
       var institute = await Institute.findOne({ email });
@@ -58,7 +61,7 @@ const logindepartment = asynchandler(async (req, res) => {
           error: "No account registered with this email",
         });
       }
-      const isMatch = await bcrypt.compare(password, institute.password);
+      const isMatch = await bcrypt.compare(decoded, institute.password);
       if (!isMatch) {
         return res.status(400).json({
           error: "Incorrect password",
@@ -97,7 +100,7 @@ const logindepartment = asynchandler(async (req, res) => {
         department: institute.department,
       });
     }
-    const isMatch = await bcrypt.compare(password, department.password);
+    const isMatch = await bcrypt.compare(decoded, department.password);
     if (!isMatch) {
       return res.status(400).json({
         error: "Incorrect password",
@@ -145,6 +148,60 @@ const logindepartment = asynchandler(async (req, res) => {
     });
   }
 });
+
+const changepassword = asyncHandler(async (req, res) => {
+  try {
+    const { oldpassword, newpassword } = req.body;
+    if (!oldpassword || !newpassword) {
+      return res.status(400).json({
+        error: "Please provide all the required fields oldpassword and newpassword",
+      });
+    }
+    const decodedold = Buffer.from(oldpassword, "base64").toString("ascii");
+    const decodednew = Buffer.from(newpassword, "base64").toString("ascii");
+    if (req.institute) {
+      const isMatch = await bcrypt.compare(decodedold, req.institute.password);
+      if (!isMatch) {
+        return res.status(400).json({
+          error: "oldpassword is incorrect",
+        });
+      }
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(decodednew, salt);
+      req.institute.password = hashedPassword;
+      await req.institute.save();
+      res.status(200).json({
+        success: true,
+        message: 'Password changed successfully',
+      });
+    }
+    if (req.department) {
+      const isMatch = await bcrypt.compare(decodedold, req.department.password);
+      if (!isMatch) {
+        return res.status(400).json({
+          error: "oldpassword is incorrect",
+        });
+      }
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(decodednew, salt);
+      req.department.password = hashedPassword;
+      await req.department.save();
+      res.status(200).json({
+        success: true,
+        message: 'Password changed successfully',
+      });
+    }
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error!",
+      message: err.message,
+    });
+  }
+}
+);
 
 const instituteunderdepartment = asynchandler(async (req, res) => {
   try {
@@ -295,4 +352,5 @@ module.exports = {
   profile,
   getjwtfromcookie,
   logout,
+  changepassword
 };
