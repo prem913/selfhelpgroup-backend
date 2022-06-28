@@ -13,7 +13,7 @@ exports.generateOTP = () => {
 exports.sendotp = async (contact, message) => {
   const headers = {
     authorization:
-      process.env.FAST_2_SMS_API_KEY.toString(),
+      process.env.FAST_2_SMS_API_KEY,
     "Content-Type": "application/json",
   };
   return await axios.post(

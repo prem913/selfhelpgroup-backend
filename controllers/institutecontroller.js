@@ -283,6 +283,7 @@ const approveorder = asyncHandler(async (req, res) => {
               department: req.user.department,
               institutename: order.institutename,
               institutelocation: order.institutelocation,
+              institutecontact: order.institutecontact,
               products: selectedproducts,
               totalamount: total,
             },
